@@ -1,18 +1,23 @@
-package com.car.demo.user;
+package com.sigorta.demo1.entities;
+
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import jakarta.validation.constraints.NotNull;
+
 @Entity
 @Table(name="users")
-
 public class User {
 	@Id
 	@GeneratedValue
 	private long id;
+	@NotNull
 	private String username;
+	@NotNull
+
 	private String surname;
 	private String tc;
 	private String phone;
