@@ -17,13 +17,13 @@ function TopBar({ direction, ...args }) {
     <div>
         <div className='shadow mb-2'>
                 <nav className='navbar navbar-light bg-light container'>
-                    <Link className='navbar-brand' to='/'>
+                    <Link className='navbar-brand' to='/anasayfa'>
                         <img src='https://w7.pngwing.com/pngs/786/126/png-transparent-logo-contracting-photography-logo-symbol.png' width={62} alt='logo'/>
                          Sigorta Ajendasi
                     </Link>
                     <ul className='nav justify-content-end'>
                         <li>
-                            <Link className='nav-link' to="/hakkimizda">
+                            <Link className='nav-link' to="/">
                                 Hakkımızda
                             </Link>
                             
@@ -44,10 +44,9 @@ function TopBar({ direction, ...args }) {
                                     <DropdownToggle caret>Ürünlerimiz</DropdownToggle>
                                     <DropdownMenu {...args}>
                                     {/* <DropdownItem header>Header</DropdownItem> */}
-                                    <DropdownItem><Link  className='link-dark link-underline-light'  to="/">İletişim</Link></DropdownItem>
-                                    <DropdownItem><Link  className='link-dark link-underline-light'  to="/">İletişim</Link></DropdownItem>
-                                    <DropdownItem><Link  className='link-dark link-underline-light'  to="/">İletişim</Link></DropdownItem>
-                                    <DropdownItem><Link  className='link-dark link-underline-light'  to="/">İletişim</Link></DropdownItem>
+                                    <DropdownItem><Link  className='link-dark link-underline-light'  to="/kasko">Kasko Deger Hesaplama</Link></DropdownItem>
+                                    <DropdownItem><Link  className='link-dark link-underline-light'  to="/trafik">Traffik Sigortası Hesaplama </Link></DropdownItem>
+                                    
                                     </DropdownMenu>
                                 </Dropdown>
                             </div>
