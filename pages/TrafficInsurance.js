@@ -1,10 +1,13 @@
 import React, { useState,useEffect} from "react"
 import axios from 'axios';
+import { useParams } from 'react-router-dom'
 import Select from 'react-select';
 function TrafficInsurance(){
+  const { userId } = useParams()
+  
     const [trafik, setTrafik] = useState({
        
-        hasarsizGunSayisi:'',
+        
     });
     const [carInfo, setCarInfo] = useState({
       marka: '',
@@ -12,6 +15,7 @@ function TrafficInsurance(){
       yil: 0,
       aracTür:'',
       motorHacim:'',
+      hasarsizGunSayisi:'',
       fiyat: 0,
     });
     const [userInfo, setUserInfo] = useState(null);
@@ -86,28 +90,37 @@ function TrafficInsurance(){
           
         ];
         const hasarsizGunSayisilar=[
-            { value: '0-50', label: '0-50' },
-            { value: '51-100', label: '51-100' },
-            { value: '101-200', label: '101-200' },
-            { value: '201-300', label: '201-300' },
-            { value: '301-400', label: '301-400' },
-            { value: '401-500', label: '401-500' },
+          { value: '0-180', label: '0-180' },
+          { value: '181-365', label: '181-365' },
+          { value: '366-540', label: '366-540' },
+          { value: '541-720', label: '541-720' },
+          { value: '721-1095', label: '721-1095' },
+          { value: '1096-1825', label: '1096-1825' },
             
            
         ]
+         useEffect(() => {
+          fetchUserInfo();
+        }, [userId])
+      
         const fetchUserInfo = async () => {
           try {
-            const response = await axios.get('/api/1.0/users/3652'); 
+            const response = await axios.get(`/api/1.0/users/${userId}`); 
             setUserInfo(response.data);
           } catch (error) {
-            console.error('Error fetching user information:', error);
+            if (error.response) {
+              console.error('Error fetching user information:', error.response.data);
+            } else if (error.message) {
+              console.error('Error fetching user information:', error.message);
+            } else {
+              console.error('Error fetching user information:', error);
+            }
+            //console.error('Error fetching user information:', error);
           }
         };
         
         
-        useEffect(() => {
-          fetchUserInfo();
-        }, [])
+
       
         const handleCreateCar = async () => {
           try {
@@ -128,7 +141,7 @@ function TrafficInsurance(){
                 ...trafik
               })
               .then(response => {
-                setFiyat(response.data.fiyat); // Assuming the API returns the price in the 'fiyat' field
+                setFiyat(response.data.fiyat); 
               })
              
             } catch (error) {
@@ -214,8 +227,8 @@ function TrafficInsurance(){
         
           HasarsizGunSayisi
           <Select class="form-select form-select-lg"
-            value={hasarsizGunSayisilar.find((option) => option.value === trafik.hasarsizGunSayisi)}
-            onChange={(selectedOption) => handleTrafikChange(selectedOption, 'hasarsizGunSayisi')}
+            value={hasarsizGunSayisilar.find((option) => option.value === carInfo.hasarsizGunSayisi)}
+            onChange={(selectedOption) => handleCarInfoChange(selectedOption, 'hasarsizGunSayisi')}
             options={hasarsizGunSayisilar}
             placeholder='HasarsizGunSayisi'
           />
