@@ -4,7 +4,9 @@ import { useParams } from 'react-router-dom'
 import Select from 'react-select';
 function TrafficInsurance(){
   const { userId } = useParams()
-  
+  const[markalar,setMarkalar]=useState([])
+  const [modeller, setModeller] = useState([]);
+  const [acceptedOffer, setAcceptedOffer] = useState(false);
     const [trafik, setTrafik] = useState({
        
         
@@ -23,40 +25,68 @@ function TrafficInsurance(){
     const handleTrafikChange = (selectedOption, fieldName) => {
       setTrafik({ ...trafik, [fieldName]: selectedOption.value });
     };
+    useEffect(() => {
+      fetchMarkalar();
+    }, []);
+  
+    const fetchMarkalar = async () => {
+      try {
+        const response = await axios.get('/api/1.0/markalar');
+        setMarkalar(response.data);
+      } catch (error) {
+        console.error('Error fetching markalar:', error);
+      }
+    };
+    useEffect(() => {
+      fetchModeller();
+    }, []);
+  
+    const fetchModeller = async () => {
+      try {
+        const response = await axios.get('/api/1.0/modeller');
+        setModeller(response.data);
+      } catch (error) {
+        console.error('Error fetching modeller:', error);
+      }
+    };
+  
   
     const handleCarInfoChange = (selectedOption, fieldName) => {
-      setCarInfo({ ...carInfo, [fieldName]: selectedOption.value });
+      const selectedMarka = selectedOption.value;
+      const filteredModeller = modeller.filter(model => model.value.startsWith(selectedMarka));
+      setModeller(filteredModeller);
+      setCarInfo({ ...carInfo, [fieldName]: selectedOption.value ,marka: selectedMarka, model: '' });
     };
   
     
       const [fiyat, setFiyat] = useState(null)
      
-      const markalar = [
-    { value: 'audi', label: 'Audi' },
-    { value: 'bmw', label: 'BMW' },
-    {value:'toyoto',label:'Toyoto'},
-    {value:'opel',label:'Opel'},
-    {value:'fiat',label:'Fiat'},
-    {value:'',label:'Opel'},
-    {value:'ford',label:'Ford'}
-  ];
+  //     const markalar = [
+  //   { value: 'audi', label: 'Audi' },
+  //   { value: 'bmw', label: 'BMW' },
+  //   {value:'toyoto',label:'Toyoto'},
+  //   {value:'opel',label:'Opel'},
+  //   {value:'fiat',label:'Fiat'},
+  //   {value:'',label:'Opel'},
+  //   {value:'ford',label:'Ford'}
+  // ];
 
-  const modeller = [
-    { value: 'audi_model1', label: 'Audi e-tron' },
-    { value: 'audi_model2', label: 'Audi A4 Sedan' },
-    { value: 'bmw_model1', label: 'BMW i5' },
-    { value: 'bmw_model2', label: 'BMW M2 Coupe' },
-    { value: 'toyota_model1', label: 'Toyota Corollo' },
-    { value: 'toyota_model2', label: 'Toyota Yaris' },
-    { value: 'opel_model1', label: 'Opel Astra' },
-    { value: 'opel_model2', label: 'Opel Corsa' },
-    { value: 'fiat_model1', label: 'Fiat Egea' },
-    { value: 'fiat_model2', label: 'Fiat 500' },
-    { value: 'ford_model1', label: 'Ford Fiesta' },
-    { value: 'ford_model2', label: 'Ford Model 2' },
+  // const modeller = [
+  //   { value: 'audi_model1', label: 'Audi e-tron' },
+  //   { value: 'audi_model2', label: 'Audi A4 Sedan' },
+  //   { value: 'bmw_model1', label: 'BMW i5' },
+  //   { value: 'bmw_model2', label: 'BMW M2 Coupe' },
+  //   { value: 'toyota_model1', label: 'Toyota Corollo' },
+  //   { value: 'toyota_model2', label: 'Toyota Yaris' },
+  //   { value: 'opel_model1', label: 'Opel Astra' },
+  //   { value: 'opel_model2', label: 'Opel Corsa' },
+  //   { value: 'fiat_model1', label: 'Fiat Egea' },
+  //   { value: 'fiat_model2', label: 'Fiat 500' },
+  //   { value: 'ford_model1', label: 'Ford Fiesta' },
+  //   { value: 'ford_model2', label: 'Ford Model 2' },
 
     
-  ];
+  // ];
 
       const aracTürleri = [
         { value: 'Otomobil', label: 'Otomobil' },
@@ -134,23 +164,41 @@ function TrafficInsurance(){
         };
 
         const handleCalculateTraffic = async () => {
-            try {
-              const response = await axios.post('/api/1.0/traffic', {
-                user: userInfo,
-                car: carInfo,
-                ...trafik
-              })
-              .then(response => {
-                setFiyat(response.data.fiyat); 
-              })
-             
-            } catch (error) {
-              console.error('AxiosError:', error);
-            }
-          };
+          try {
+            const response = await axios.post('/api/1.0/traffic/calculatePrice', {
+              user: userInfo,
+              car: carInfo,
+              ...trafik
+            });
+            const calculatedPrice = response.data.fiyat;
+            console.log(response.data)
+            console.log(response.data.fiyat)
+            console.log(calculatedPrice);
+            setFiyat(response.data);
+             // Teklifi sıfırla
+          } catch (error) {
+            console.error('AxiosError:', error);
+          }
+        };
+        const handleSaveTraffic = async () => {
+          try {
+            const response = await axios.post('/api/1.0/traffic/saveTraffic', {
+              user: userInfo,
+              car: carInfo,
+              ...trafik
+            });
+            // const calculatedPrice = response.data.fiyat;
+            // console.log(response.data)
+            // console.log(response.data.fiyat)
+            // console.log(calculatedPrice);
+            // setFiyat(response.data);
+             // Teklifi sıfırla
+          } catch (error) {
+            console.error('AxiosError:', error);
+          }
+        };
     
-    
-    
+        
     return(
         <div className="container">
             <h1>Trafik Sigortasi</h1>
@@ -158,11 +206,11 @@ function TrafficInsurance(){
         
           Aracın Markası:
           <Select class="form-select form-select-lg"
-            value={markalar.find((option) => option.value === carInfo.marka)}
-            onChange={(selectedOption) => handleCarInfoChange(selectedOption, 'marka')}
-            options={markalar}
-            placeholder='Marka Seçin'
-          />
+             value={markalar.find((option) => option.value === carInfo.marka)}
+             onChange={(selectedOption) => handleCarInfoChange(selectedOption, 'marka')}
+             options={markalar.map(option => ({ value: option.value, label: option.label }))} // options prop'unu güncelledik
+             placeholder='Marka Seçin'
+           />
         
         <br />
       </div>
@@ -243,8 +291,10 @@ function TrafficInsurance(){
       </button>
       
       {fiyat !== null && <p>Fiyat: {fiyat}</p>}
-
+      
+      <button type="button" className="btn btn-primary" onClick={handleSaveTraffic}>Teklifi Kabul Et</button>
       <br />
+
         </div>
     )
 

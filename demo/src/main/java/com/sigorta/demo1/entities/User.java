@@ -1,12 +1,16 @@
 package com.sigorta.demo1.entities;
 
 
+import com.sigorta.demo1.AgeCalculator;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name="users")
@@ -17,11 +21,30 @@ public class User {
 	@NotNull
 	private String username;
 	@NotNull
-
 	private String surname;
+	@NotNull
+    @Size(min = 11, max = 11, message = "TC Kimlik Numarası 11 haneli olmalıdır")
+    @Pattern(regexp = "\\d+", message = "TC Kimlik Numarası sadece rakamlardan oluşmalıdır")
 	private String tc;
 	private String phone;
 	
+	private String birthDate;
+	
+	
+	public int getYas() {
+		if(birthDate !=null) {
+			return AgeCalculator.calculateAge(birthDate);
+		}
+		return 0;
+		
+	}
+	
+	public String getBirthDate() {
+		return birthDate;
+	}
+	public void setBirthDate(String birthDate) {
+		this.birthDate = birthDate;
+	}
 	public String getUsername() {
 		return username;
 	}

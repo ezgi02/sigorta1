@@ -47,7 +47,7 @@ const UserListPage = () => {
             <th>Soyad</th>
             <th>TC</th>
             <th>Cep Telefonu</th>
-            <th>Yaş</th>
+            <th>Dogum Tarihi</th>
             <th>İşlemler</th>
           </tr>
         </thead>
@@ -58,7 +58,7 @@ const UserListPage = () => {
               <td>{user.surname}</td>
               <td>{user.tc}</td>
               <td>{user.phone}</td>
-              <td>{user.yas}</td>
+              <td>{user.birthDate}</td>
               <td>
                 <button
                   className="btn btn-sm btn-primary mr-1"

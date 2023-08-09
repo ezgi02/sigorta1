@@ -30,10 +30,11 @@ public class TrafficController {
 	    this.userRepository = userRepository;
         this.carRepository = carRepository;
 	 }
-	@PostMapping
-	public ResponseEntity<Traffic> createTraffic(@RequestBody Traffic trafficRequest) {
-		try {
-			Traffic traffic=new Traffic();
+	
+	@PostMapping("/calculatePrice")
+    public ResponseEntity<Double> calculateTrafficPrice(@RequestBody Traffic trafficRequest) {
+        try {
+        	Traffic traffic=new Traffic();
 			traffic.setCar(trafficRequest.getCar());
 			traffic.setUser(trafficRequest.getUser());
 			
@@ -41,14 +42,36 @@ public class TrafficController {
 			Car car=carRepository.save(traffic.getCar());
 			traffic.setUser(user);
 			traffic.setCar(car);
-			
-			Traffic createdTraffic = trafficService.createTraffic(user,car,traffic);
-			return ResponseEntity.ok(createdTraffic);
-		
-		}catch (Exception ex) {
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+			Double calculatedPrice = trafficService.calculateTrafficPrice(user, car, trafficRequest);
+            return ResponseEntity.ok(calculatedPrice);
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+	 @PostMapping("/saveTraffic")
+	 public ResponseEntity<Traffic> saveTraffic(@RequestBody Traffic trafficRequest) {
+	        try {
+	            Traffic traffic = new Traffic();
+	            traffic.setCar(trafficRequest.getCar());
+	            traffic.setUser(trafficRequest.getUser());
+
+	            User user = userRepository.save(traffic.getUser());
+	            Car car = carRepository.save(traffic.getCar());
+	            traffic.setUser(user);
+	            traffic.setCar(car);
+
+	            Traffic createdTraffic = trafficService.createTraffic(user, car, traffic);
+
+	            return ResponseEntity.ok(createdTraffic);
+	        } catch (Exception ex) {
+	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+	        }
 	    }
-		
-		
-	}
 }
+
+
+
+
+
+
+

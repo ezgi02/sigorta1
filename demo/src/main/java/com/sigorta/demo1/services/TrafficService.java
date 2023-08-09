@@ -14,7 +14,7 @@ private final TrafficRepository trafficRepository;
 	public TrafficService( TrafficRepository trafficRepository) {
 		this.trafficRepository=trafficRepository;
 	}
-	public Traffic createTraffic(User user, Car car,Traffic traffic) {
+	public Double calculateTrafficPrice(User user, Car car,Traffic traffic) {
 		double trafikHesap=0;
 		double trafikHesap1=0;
 		int yil=car.getYil();
@@ -78,10 +78,19 @@ private final TrafficRepository trafficRepository;
 		else {
 			trafficPrice+=1000;
 		}
-		traffic.setFiyat(trafficPrice+traffic.getFiyat());
-		traffic.setUser(user);
-		traffic.setCar(car);
-		
+		return trafficPrice= trafficPrice+traffic.getFiyat();
+				
 		//traffic.setFiyat(trafficPrice+traffic.getFiyat());
-		return trafficRepository.save(traffic);
-}}
+		//return trafficRepository.save(traffic);
+		
+}   
+	public Traffic createTraffic(User user, Car car, Traffic traffic) {
+        double calculatedPrice = calculateTrafficPrice(user, car, traffic);
+
+        traffic.setFiyat(calculatedPrice);
+        traffic.setUser(user);
+        traffic.setCar(car);
+
+        return trafficRepository.save(traffic);
+    }
+	}

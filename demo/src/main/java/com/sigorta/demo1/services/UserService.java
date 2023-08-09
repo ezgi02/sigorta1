@@ -1,5 +1,6 @@
 package com.sigorta.demo1.services;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
@@ -15,14 +16,17 @@ public class UserService {
 		this.userRepository=userRepository;  
 	}
 
-	public void save(User user) {
-		// 
-		userRepository.save(user);
+	public User save(User user) {
+		return userRepository.save(user);
 		
 	}
 	public User getOneUser(Long userId) {
 		return userRepository.findById(userId).orElse(null);
 	}
+	 public List<User> getAllUsers() {
+	        return userRepository.findAll();
+	    }
+
 	public User updateOneUser(Long userId,User newUser) {
 		Optional<User> user=userRepository.findById(userId);
 		 if(user.isPresent()) {
@@ -31,6 +35,8 @@ public class UserService {
 			 foundUser.setSurname(newUser.getSurname());
 			 foundUser.setPhone(newUser.getPhone());
 			 foundUser.setTc(newUser.getTc());
+			 foundUser.setBirthDate(newUser.getBirthDate());
+		//	 foundUser.setYas(newUser.getYas());
 			 userRepository.save(foundUser);
 			 return foundUser;
 			 }else
@@ -41,6 +47,9 @@ public class UserService {
 		// TODO Auto-generated method stub
 		userRepository.deleteById(userId);
 		}
+	 public User getUserWithSameTc(String tc) {
+	        return userRepository.findByTc(tc);
+	    }
 	}
 	
 
