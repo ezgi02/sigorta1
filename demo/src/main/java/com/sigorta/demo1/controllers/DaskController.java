@@ -1,8 +1,13 @@
 package com.sigorta.demo1.controllers;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,8 +32,8 @@ public class DaskController {
 		this.userRepository=userRepository;
 		this.homeRepository=homeRepository;
 	}
-	@PostMapping("/calculateDaskPrice")
-	public ResponseEntity<Double> calculateDaskPrice(@RequestBody Dask daskRequest) {
+	@PostMapping("/calculatePrice")
+	public ResponseEntity<Double[]> calculateDaskPrice(@RequestBody Dask daskRequest) {
         try {
         	Dask dask=new Dask();
 			dask.setHome(daskRequest.getHome());
@@ -38,12 +43,13 @@ public class DaskController {
 			Home home=homeRepository.save(dask.getHome());
 			dask.setUser(user);
 			dask.setHome(home);
-			Double calculatedDaskPrice = daskService.calculateDaskPrice(user, home, daskRequest);
-            return ResponseEntity.ok(calculatedDaskPrice);
+			Double[] calculatedDaskValues = daskService.calculateDaskPrice(user, home, daskRequest);
+            return ResponseEntity.ok(calculatedDaskValues);
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
 	@PostMapping("/saveDask")
 	public ResponseEntity<Dask> saveDask(@RequestBody Dask daskRequest) {
         try {
@@ -62,5 +68,13 @@ public class DaskController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-	
+	@GetMapping
+	public ResponseEntity<List<Dask>> getAllDask(){
+		List<Dask> dasks=daskService.getAllDask();
+		return ResponseEntity.ok(dasks);
+	}
+	@DeleteMapping("/{daskId}")
+	public void deleteDask(@PathVariable Long daskId) {
+		daskService.deleteById(daskId);
+	}
 }
