@@ -6,6 +6,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+//import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
@@ -19,6 +20,8 @@ public class Dask {
 	 @ManyToOne
 	 @JoinColumn(name="user_id")
 		private User user;
+	 
+	 //@NotNull
 	 @ManyToOne
 	 @JoinColumn(name = "home_id")
 	 private Home home;
@@ -27,6 +30,6 @@ public class Dask {
 	 private double sigortaPrim;
 	 public Dask() {
 		 this.fiyat=200000;
-		 this.sigortaPrim=100;
+		 this.sigortaPrim=300;
 	 }
 }

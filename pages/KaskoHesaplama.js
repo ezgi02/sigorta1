@@ -1,8 +1,13 @@
 import React, { useState,useEffect } from 'react';
 import axios from 'axios';
 import Select from 'react-select';
+import {Link, useParams } from 'react-router-dom'
 
 function KaskoHesaplama() {
+  const { userId } = useParams()
+  const[markalar,setMarkalar]=useState([])
+  const [modeller, setModeller] = useState([]);
+  const [validationErrors, setValidationErrors] = useState({});
   const [carInfo, setCarInfo] = useState({
     marka: '',
     model: '',
@@ -15,39 +20,17 @@ function KaskoHesaplama() {
   
 
   const handleChange = (selectedOption, fieldName) => {
-    setCarInfo({ ...carInfo, [fieldName]: selectedOption.value });
+    if(fieldName === 'marka'){
+      const selectedMarka = selectedOption.value;
+  const filteredModeller = modeller.filter(model => model.value.startsWith(selectedMarka));
+  setModeller(filteredModeller);
+  setCarInfo({ ...carInfo, [fieldName]: selectedOption.value, marka: selectedMarka, model: '' });
+    }else {
+      setCarInfo({ ...carInfo, [fieldName]: selectedOption.value });
+    }
+   
   };
 
-  // Marka seçenekleri
-  const markalar = [
-    { value: 'audi', label: 'Audi' },
-    { value: 'bmw', label: 'BMW' },
-    {value:'toyoto',label:'Toyoto'},
-    {value:'opel',label:'Opel'},
-    {value:'fiat',label:'Fiat'},
-    {value:'',label:'Opel'},
-    {value:'ford',label:'Ford'}
-  ];
-
-  // Model seçenekleri
-  const modeller = [
-    { value: 'audi_model1', label: 'Audi e-tron' },
-    { value: 'audi_model2', label: 'Audi A4 Sedan' },
-    { value: 'bmw_model1', label: 'BMW i5' },
-    { value: 'bmw_model2', label: 'BMW M2 Coupe' },
-    { value: 'toyota_model1', label: 'Toyota Corollo' },
-    { value: 'toyota_model2', label: 'Toyota Yaris' },
-    { value: 'opel_model1', label: 'Opel Astra' },
-    { value: 'opel_model2', label: 'Opel Corsa' },
-    { value: 'fiat_model1', label: 'Fiat Egea' },
-    { value: 'fiat_model2', label: 'Fiat 500' },
-    { value: 'ford_model1', label: 'Ford Fiesta' },
-    { value: 'ford_model2', label: 'Ford Model 2' },
-
-    // Diğer modelleri buraya ekleyin
-  ];
-
-  // Yıl seçenekleri
   const yillar = [
     { value: 2023, label: '2023' },
     { value: 2022, label: '2022' },
@@ -64,46 +47,85 @@ function KaskoHesaplama() {
     { value: 2011, label: '2011' },
     { value: 2010, label: '2010' },
 
-    // Diğer yılları buraya ekleyin
+    
   ];
-  const fetchUserInfo = async () => {
+  useEffect(() => {
+    fetchMarkalar();
+  }, []);
+
+  const fetchMarkalar = async () => {
     try {
-      const response = await axios.get('/api/1.0/users/1752'); // veya başka bir endpoint kullanarak kullanıcı bilgilerini getirin.
-      setUserInfo(response.data);
+      const response = await axios.get('/api/1.0/markalar');
+      setMarkalar(response.data);
     } catch (error) {
-      console.error('Error fetching user information:', error);
+      console.error('Error fetching markalar:', error);
     }
   };
-  
-  // Bu fonksiyonu örneğin, UserSignupPage bileşeni içinde useEffect() kullanarak component ilk yüklendiğinde çağırabilirsiniz:
+  useEffect(() => {
+    fetchModeller();
+  }, []);
+
+  const fetchModeller = async () => {
+    try {
+      const response = await axios.get('/api/1.0/modeller');
+      setModeller(response.data);
+    } catch (error) {
+      console.error('Error fetching modeller:', error);
+    }
+  };
   useEffect(() => {
     fetchUserInfo();
-  }, [])
+  }, [userId])
 
-
-  const handleCreateCar = async () => {
+  const fetchUserInfo = async () => {
     try {
-      const response = await axios.post('/api/1.0/cars', carInfo);
-      const newCarId = response.data.id;
-      setCarInfo({ ...carInfo, id: newCarId });
-      alert('Car information saved successfully!');
+      const response = await axios.get(`/api/1.0/users/${userId}`); 
+      setUserInfo(response.data);
     } catch (error) {
-      console.error('Car creation error:', error);
+      if (error.response) {
+        console.error('Error fetching user information:', error.response.data);
+      } else if (error.message) {
+        console.error('Error fetching user information:', error.message);
+      } else {
+        console.error('Error fetching user information:', error);
+      }
+      //console.error('Error fetching user information:', error);
     }
   };
+ 
+
+
+ 
 // /api/1.0/cars/${carInfo.id}/calculateKasko
   const handleCalculateKasko = async () => {
     try {
-      const response = await axios.post(`/api/1.0/kasko`,{
+      const response = await axios.post(`/api/1.0/kasko/kaskofiyati`,{
         user: userInfo,
         car: carInfo,
       });
       console.log('Kasko calculation response:', response.data);
       setKaskoValue(response.data);
+      setValidationErrors({});
     } catch (error) {
+      if (error.response && error.response.data.validationErrors) {
+        
+        setValidationErrors(error.response.data.validationErrors);
+      }
       console.error('AxiosError:', error);
     }
   };
+  const handleSaveKasko = async () => {
+    try {
+      const response = await axios.post(`/api/1.0/kasko`,{
+        user: userInfo,
+        car: carInfo,
+      });
+      // console.log('Kasko calculation response:', response.data);
+      // setKaskoValue(response.data);
+    } catch (error) {
+      console.error('AxiosError:', error);
+    }
+  }
 
   return (
     <div className='container'>
@@ -111,12 +133,16 @@ function KaskoHesaplama() {
       <div>
         
           Arabanın Markası:
-          <Select class="form-select form-select-lg"
+          <Select className={`form-select ${validationErrors.marka ? 'is-invalid' : ''}`}
             value={markalar.find((option) => option.value === carInfo.marka)}
             onChange={(selectedOption) => handleChange(selectedOption, 'marka')}
-            options={markalar}
+            options={markalar.map(option => ({ value: option.value, label: option.label }))} 
+            //options={markalar}
             placeholder='Marka Seçin'
           />
+           {validationErrors.marka && (
+    <div className="invalid-feedback">{validationErrors.marka}</div>
+  )}
         
         <br />
       </div>
@@ -155,14 +181,19 @@ function KaskoHesaplama() {
      
 
       <br />
-
-      <button type='button' className='btn btn-success' onClick={handleCreateCar}>
-        Kaydet
-      </button>
       <button type='button' className='btn btn-warning' onClick={handleCalculateKasko}>
         Kaskoyu Hesapla
       </button>
-      {kaskoValue !== null && <p>Kasko Fiyatı: {kaskoValue.fiyat}</p>}
+      
+      {kaskoValue !== null && <p>Kasko Fiyatı: {kaskoValue}</p>}
+      <buton type="button" className="btn btn-success" onClick={handleSaveKasko}>
+        Kasko Kaydet
+      </buton>
+      <button className='btn btn-danger'>
+      <Link className='nav-link' to={"/anasayfa"}>
+            Reddet
+        </Link>
+      </button>
     </div>
   );
 }

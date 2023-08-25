@@ -3,6 +3,7 @@ import React, { useState,useEffect} from "react"
 import {Link, useParams } from 'react-router-dom'
 import Select from 'react-select';
 import { Button } from "reactstrap";
+import "../index.js"
 function Dask() {
     const [dask, setDask] = useState({
        
@@ -10,9 +11,12 @@ function Dask() {
     const { userId } = useParams()
     const [userInfo, setUserInfo] = useState(null);
     const [sigortaPrim, setSigortaPrim] = useState(null)
+    const [error, setError] = useState(null);
+    const [fiyat,setFiyat]=useState(null)
     const [cities, setCity] = useState([])
     const [districts, setDistricts] = useState([]);
     const [selectedDistrict, setSelectedDistrict] = useState(null)
+    const [selection,setSelection]=useState([])
     const [homeInfo, sethomeInfo] = useState({
         city: '',
         district: '',
@@ -60,6 +64,22 @@ function Dask() {
             console.error('Error fetching styles:', error);
         }
     };
+    useEffect(() => {
+      fetchSelection();
+  }, []);
+  
+  const fetchSelection = async () => {
+      try {
+          const response = await axios.get('/api/1.0/process/allProcessTypes'); 
+          const selection = response.data;
+
+          console.log(selection);
+          setSelection(selection);
+      } catch (error) {
+          console.error('Error fetching selection:', error);
+      }
+  };
+
     useEffect(()=>{
         fetchCity();
     },[])
@@ -73,32 +93,16 @@ function Dask() {
             console.error('error fetching cities',error);
         }
     }
-    // const handleCityChange = async (selectedOption) => {
-    //   setCity(selectedOption);
-    //   if (selectedOption) {
-    //     try {
-    //       const response = await axios.get(
-    //         `/api/1.0/${selectedOption.value}/districts`
-    //       );
-    //       const districtsData = response.data;
-    //       setDistricts(districtsData);
-    //     } catch (error) {
-    //       console.error("Error fetching districts", error);
-    //     }
-    //   } else {
-    //     setDistricts([]);
-    //     setSelectedDistrict(null);
-    //   }
-    // };
+    
     const handleCityChange = async (selectedOption) => {
-      // Seçilen şehrin ID'sini kullanarak ilçeleri API'den çekin ve districts state'ini güncelleyin
+      
       const cityId = cities.find((city) => city.name === selectedOption.value).id;
       try {
         const response = await axios.get(`/api/1.0/${cityId}/districts`);
         const districtsData = response.data;
         setDistricts(districtsData);
         handleHomeInfoChange(selectedOption,'city')
-        setSelectedDistrict(null); // İl değiştiğinde ilçeyi sıfırla
+        setSelectedDistrict(null); 
       } catch (error) {
         console.error("Error fetching districts", error);
       }
@@ -106,13 +110,9 @@ function Dask() {
     
     const handleDistrictChange = (selectedOption) => {
       setSelectedDistrict(selectedOption);
-      // Burada homeInfo'daki district'i güncellemeyi unutmayın
+
       handleHomeInfoChange(selectedOption, 'district');
     };
-    
-    
-    
-    
     
     
     useEffect(() => {
@@ -164,27 +164,30 @@ function Dask() {
             ...prevHomeInfo,
             [fieldName]: selectedOption.value
         }));
+      
     };
     const handleCalculateDask= async () => {
         try {
-          const response = await axios.post('/api/1.0/dask/calculateDaskPrice', {
+          const response = await axios.post('/api/1.0/dask/calculatePrice', {
             user: userInfo,
             home: homeInfo,
             ...dask
           });
-          const calculatedPrice = response.data.sigortaPrim;
+          const calculatedPrice = response.data;
           console.log(response.data)
-          console.log(response.data.sigortaPrim)
+          //console.log(response.data.sigortaPrim)
           console.log(calculatedPrice);
         //  setFiyat(response.data.sigortaPrim);
          //setFiyat(calculatedPrice)
-         setSigortaPrim(calculatedPrice.sigortaPrim);
+         setSigortaPrim(calculatedPrice[0]);
+         setFiyat(calculatedPrice[1])
            
         } catch (error) {
           console.error('AxiosError:', error);
-          if (error.response) {
+          if (error.response && error.response.data) {
             console.error('Response Status:', error.response);
             console.error('Response Data:', error.response.data);
+           
         }
         }
       };
@@ -202,26 +205,28 @@ function Dask() {
           // console.log(calculatedPrice);
           // setFiyat(response.data);
            // Teklifi sıfırla
+           alert("Dask Sigortası başarılı bie şekilde kaydedildi")
         } catch (error) {
           console.error('AxiosError:', error);
         }
       };
-     
+      
 
   return (
     <div className="container">
         <h1>Dask Hesaplama</h1>
         <div className="row g-3">
             <div className='col-md-4'>
-                İL
+                İl
                 <Select
                   value={cities.find((city) => city.value === homeInfo.city)}
                   onChange={(selectedOption) => handleCityChange(selectedOption)}
                   
                   options={cities.map((city) => ({ value: city.name, label: city.name }))}
                   placeholder='Seçiniz'
-                
+                  
                 />
+                
             </div>
             <div className='col-md-4'>
                 İlçe
@@ -242,7 +247,7 @@ function Dask() {
                 />
             </div>
             <div className="col-md-8">
-                Bina İnşa Yili
+                Bina İnşa Yılı
                 <Select
                 value={years.find(option => option.value === homeInfo.constructionYear)}
                 onChange={(selectedOption) => handleHomeInfoChange(selectedOption, 'constructionYear')}
@@ -271,29 +276,45 @@ function Dask() {
                 placeholder="m2"/>
             </div>
             <div className="col-md-8">
-                Yenileme Seçimi
+                İşlem Tipi
                 <Select
-                placeholder="Şeçiniz"
+                value={selection.find(option => option.value === homeInfo.selection)}
+                onChange={(selectedOption) => handleHomeInfoChange(selectedOption, 'selection')}
+                options={selection.map(option=> ({ value: option, label: option }))}
+                placeholder="Seçiniz"
                 />
             </div>  
-            <div className="col-md-8">
-                <Button className="btn btn-success" onClick={handleCreateHome}>
-                    Kaydet
-                </Button>
+            {/* <div className="col-md-8">
+              <label>Adres</label>
+              <input className="form-control"
+              type="text"
+              name="adress"
+              placeholder="sokak,mahalle"/>
+            </div> */}
+            <div className="row g-3">
+              <div className="col-md-4"> 
+              <button type='button' className='btn btn-warning' onClick={handleCalculateDask} >Dask Teklifi Al</button>
+              </div>
+              <div className="col-md-4">
+              <Button type="button" className='btn btn-success' onClick={handleSaveDask}>Teklifi kabul Et</Button>
+              </div>
+              <div className="col-md-4">
+              <button className="btn btn-danger">
+              <Link className='nav-link' to={"/anasayfa"}>
+              Çıkış
+              </Link>
+              </button>
+              </div>
             </div>
-            <button type='button' className='btn btn-warning' onClick={handleCalculateDask} >
-        Dask Teklifi Al
-      </button>
-      <Button type="button" className='btn btn-darning' onClick={handleSaveDask}>
-            Teklifi kabul Et
-      </Button>
-      <button className="btn btn-danger">
-      <Link className='nav-link' to={"/anasayfa"}>
-            Reddet
-        </Link>
-      </button>
+
+            
+        {sigortaPrim !== null && <p>Sigorta Primi: {sigortaPrim}</p>}
+        {fiyat !== null && <p>Sigorta Bedeli: {fiyat}</p>}
       
-      {sigortaPrim !== null && <p>Fiyat: {sigortaPrim}</p>}
+      
+      
+      
+      
       
         </div>
     </div>

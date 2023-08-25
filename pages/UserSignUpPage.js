@@ -42,6 +42,7 @@ const UserSignupPage = () => {
             //console.log(response.data.userId)
             //console.log(userId)
             setState({ ...state, pendingApiCall: false })
+
             navigate(`/users/${userId}/sigorta`); // Yönlendirme işlemini yap
         } catch (error) {
             if (error.response.data.validationErrors) {

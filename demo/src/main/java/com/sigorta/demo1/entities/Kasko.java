@@ -23,9 +23,9 @@ public class Kasko {
 	  private Car car;
 
 	  private double fiyat;
-	public Kasko(){
+	/*public Kasko(){
 		this.fiyat=200000.0;
-	}
+	}*/
 
 	public Long getId() {
 		return id;
