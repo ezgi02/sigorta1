@@ -7,12 +7,15 @@ function KaskoHesaplama() {
   const { userId } = useParams()
   const[markalar,setMarkalar]=useState([])
   const [modeller, setModeller] = useState([]);
+  const [plateNumber, setPlateNumber] = useState('');
   const [validationErrors, setValidationErrors] = useState({});
+  const [selectedModel, setSelectedModel] = useState(null)
   const [carInfo, setCarInfo] = useState({
     marka: '',
     model: '',
     yil: 0,
     fiyat: 0,
+    plakaKodu:'',
   });
 
   const [kaskoValue, setKaskoValue] = useState(null);
@@ -20,16 +23,29 @@ function KaskoHesaplama() {
   
 
   const handleChange = (selectedOption, fieldName) => {
-    if(fieldName === 'marka'){
-      const selectedMarka = selectedOption.value;
-  const filteredModeller = modeller.filter(model => model.value.startsWith(selectedMarka));
-  setModeller(filteredModeller);
-  setCarInfo({ ...carInfo, [fieldName]: selectedOption.value, marka: selectedMarka, model: '' });
-    }else {
+    if (fieldName === 'marka') {
+      const markaId = selectedOption.id; // Seçilen markanın ID'sini alıyoruz
+      console.log("Selected Marka ID:", markaId);
+      setCarInfo({ ...carInfo, [fieldName]: selectedOption.label, model: '' });
+      setValidationErrors({
+        ...validationErrors,
+        marka: ''
+      });
+  
+      // Burada model seçimini sıfırlayabilirsiniz
+      setCarInfo({ ...carInfo, [fieldName]: selectedOption.label, model: '' });
+    } else {
       setCarInfo({ ...carInfo, [fieldName]: selectedOption.value });
     }
-   
   };
+//   const handleChange = (selectedOption, fieldName) => {
+//     setCarInfo(prevHomeInfo => ({
+//         ...prevHomeInfo,
+//         [fieldName]: selectedOption.value
+//     }));
+  
+// };
+  
 
   const yillar = [
     { value: 2023, label: '2023' },
@@ -49,30 +65,52 @@ function KaskoHesaplama() {
 
     
   ];
-  useEffect(() => {
-    fetchMarkalar();
-  }, []);
+
+  // useEffect(() => {
+  //   fetchMarkalar();
+  // }, []);
 
   const fetchMarkalar = async () => {
     try {
       const response = await axios.get('/api/1.0/markalar');
+     
       setMarkalar(response.data);
     } catch (error) {
       console.error('Error fetching markalar:', error);
     }
   };
   useEffect(() => {
-    fetchModeller();
+    fetchMarkalar();
   }, []);
-
-  const fetchModeller = async () => {
+ 
+  
+  const handleMarkaChange = async (selectedOption) => {
+    const markaId = selectedOption.id; 
+    const isim=selectedOption.value// Seçilen markanın ID'sini alıyoruz
+    console.log("Selected Marka ID:", markaId);
+    console.log(isim)
     try {
-      const response = await axios.get('/api/1.0/modeller');
-      setModeller(response.data);
+        const response = await axios.get(`/api/1.0/${markaId}/modeller`);
+        console.log(response.data);
+        const modelOptions = response.data.map(model => ({ value: model.label, label: model.label }));
+        setModeller(modelOptions);
+        console.log(isim)
+        console.log(selectedOption.value)
+        selectedOption.value = selectedOption.label;
+       handleChange(selectedOption, 'marka');
+       
+        setSelectedModel(null);
+       
     } catch (error) {
-      console.error('Error fetching modeller:', error);
+        console.error("Error fetching modeller", error);
     }
+};
+const handleModelChange = (selectedOption) => {
+    setSelectedModel(selectedOption);
+
+   handleChange(selectedOption, 'model');
   };
+
   useEffect(() => {
     fetchUserInfo();
   }, [userId])
@@ -107,25 +145,43 @@ function KaskoHesaplama() {
       setKaskoValue(response.data);
       setValidationErrors({});
     } catch (error) {
-      if (error.response && error.response.data.validationErrors) {
-        
-        setValidationErrors(error.response.data.validationErrors);
+      if(error.response){
+        if (error.response.data.validationErrors) {
+          console.log(error.response.data.validationErrors)
+        //setValidationErrors(error.response.data.validationErrors);
+        }else{
+          console.log('Sunucu Hata Kodu:', error.response.status);
+          console.log('Sunucu Hata Açıklaması:', error.response.data);
+      }
+      }
+      
+      else if (error.request) {
+        console.log('İstek Yapılamadı:', error.request);
+      } else {
+        console.log('Bir Hata Oluştu:', error.message);
       }
       console.error('AxiosError:', error);
+    
+     // console.error('AxiosError:', error);
     }
   };
   const handleSaveKasko = async () => {
     try {
-      const response = await axios.post(`/api/1.0/kasko`,{
+      const response = await axios.post(`/api/1.0/kasko/kaydetme`,{
         user: userInfo,
         car: carInfo,
       });
+      alert("basarılı bir şekilde kullanıcı kaydedildi")
       // console.log('Kasko calculation response:', response.data);
       // setKaskoValue(response.data);
     } catch (error) {
-      console.error('AxiosError:', error);
+      if (error.response && error.response.data.validationErrors) {
+        console.log(error.response.data.validationErrors)
+        setValidationErrors(error.response.data.validationErrors);
+      }
     }
   }
+  
 
   return (
     <div className='container'>
@@ -133,10 +189,10 @@ function KaskoHesaplama() {
       <div>
         
           Arabanın Markası:
-          <Select className={`form-select ${validationErrors.marka ? 'is-invalid' : ''}`}
-            value={markalar.find((option) => option.value === carInfo.marka)}
-            onChange={(selectedOption) => handleChange(selectedOption, 'marka')}
-            options={markalar.map(option => ({ value: option.value, label: option.label }))} 
+          <Select className={` ${validationErrors.marka ? 'is-invalid' : ''}`}
+            value={markalar.find((marka) => marka.value === carInfo.marka)}
+            onChange={(selectedOption)=>handleMarkaChange(selectedOption)}
+            options={markalar.map(marka => ({ value: marka.value, label: marka.label,id: marka.id}))} 
             //options={markalar}
             placeholder='Marka Seçin'
           />
@@ -150,20 +206,68 @@ function KaskoHesaplama() {
       
         Arabanın Modeli:
         <Select
-          value={modeller.find((option) => option.value === carInfo.model)}
-          onChange={(selectedOption) => handleChange(selectedOption, 'model')}
+          // value={modeller.find((option) => option.value === carInfo.model)}
+          value={selectedModel}
+          onChange={(selectedOption) => handleModelChange(selectedOption, 'model')}
           options={modeller}
           placeholder='Model Seçin'
         />
       
       <br />
-      
+      Plaka Kodu
+      <input
+  className='form-control'
+  type='text'
+  name='plakaKodu'
+  value={carInfo.plakaKodu}
+  onChange={(e) => {
+    const inputValue = e.target.value;
+    const formattedValue = inputValue.toUpperCase(); // Küçük harfleri büyük harfe çevir
+    setCarInfo({ ...carInfo, plakaKodu: formattedValue });
+  }}
+  onKeyDown={(e) => {
+    const key = e.key;
+    const inputValue = e.target.value;
+    const isNumeric = /^[0-9]+$/.test(key);
+    const isLetter = /^[a-zA-Z]+$/.test(key);
+
+    if (key === "Backspace" || key === "Delete") {
+      return;
+    }
+    if (
+      (inputValue.length === 0 || inputValue.length === 1) &&
+      !isNumeric
+    ) {
+      e.preventDefault();
+    } else if (
+      (inputValue.length === 2 || inputValue.length === 3) &&
+      !isLetter
+    ) {
+      e.preventDefault();
+    } else if (
+      (inputValue.length === 4) &&
+      !isNumeric && !isLetter
+    ) {
+      e.preventDefault();
+    } else if (
+      (inputValue.length === 5 || inputValue.length === 6 || inputValue.length === 7 || inputValue.length === 8) &&
+      !isNumeric
+    ) {
+      e.preventDefault();
+    }
+  }}
+  maxLength={8}
+  placeholder='Plaka Kodu'
+  required
+/>
+
         Yıl:
         <Select
           value={yillar.find((option) => option.value === carInfo.yil)}
           onChange={(selectedOption) => handleChange(selectedOption, 'yil')}
           options={yillar}
           placeholder='Yıl Seçin'
+          
         />
       
       <br />
@@ -178,6 +282,7 @@ function KaskoHesaplama() {
           placeholder='Car Fiyat'
           required
         />
+
      
 
       <br />
@@ -199,22 +304,3 @@ function KaskoHesaplama() {
 }
 
 export default KaskoHesaplama;        
-       
-      
-      
-      
-      
-        
-        
-          
-          
-          
-          
-          
-          
-        
-     
-      
-      
-
-  

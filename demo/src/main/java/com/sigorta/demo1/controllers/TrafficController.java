@@ -48,22 +48,17 @@ public class TrafficController {
 	
 	@PostMapping("/calculatePrice")
     public ResponseEntity<Double> calculateTrafficPrice(@Valid @RequestBody Traffic trafficRequest) {
-      //  try {
+     
         	Traffic traffic=new Traffic();
 			traffic.setCar(trafficRequest.getCar());
 			traffic.setUser(trafficRequest.getUser());
 			
-			User user=userRepository.save(traffic.getUser());
-			Car car=carRepository.save(traffic.getCar());
-			traffic.setUser(user);
-			traffic.setCar(car);
-			Double calculatedPrice = trafficService.calculateTrafficPrice(user, car, trafficRequest);
+			
+			Double calculatedPrice = trafficService.calculateTrafficPrice(trafficRequest.getUser(), trafficRequest.getCar(), trafficRequest);
             return ResponseEntity.ok(calculatedPrice);
-       // } /*catch (Exception ex) {
-          /*  return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }*/
+       
     }
-	@ExceptionHandler(MethodArgumentNotValidException.class)
+	/*@ExceptionHandler(MethodArgumentNotValidException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleValidationException(MethodArgumentNotValidException exception) {
 		//ApiError error=new ApiError(400,"Validation error","/api/1.0/traffic/calculatePrice");
@@ -73,15 +68,26 @@ public class TrafficController {
             validationErrors.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
         
-        ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST.value(), "Validation error", "/api/1.0/traffic/calculatePrice");
+        ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST.value(), "Validation error", "/api/1.0/traffic/saveTraffic");
         apiError.setValidationErrors(validationErrors);
         
      //   return ResponseEntity.badRequest().body(apiError);
         return apiError;
-    }
+    }*/
+	/*@ExceptionHandler(MethodArgumentNotValidException.class)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	public ApiError handleValidationException(MethodArgumentNotValidException exception) {
+		ApiError error = new ApiError(400, "Validation error", "/api/1.0/traffic/saveTraffic");
+		Map<String,String> validationErrors=new HashMap<>();
+		for(FieldError fieldError:exception.getBindingResult().getFieldErrors()) {
+			validationErrors.put(fieldError.getField(), fieldError.getDefaultMessage());
+		}
+		error.setValidationErrors(validationErrors);
+		return error;
+	}*/
 	 @PostMapping("/saveTraffic")
 	 public ResponseEntity<Traffic> saveTraffic(@RequestBody Traffic trafficRequest) {
-	        try {
+	     //   try {
 	            Traffic traffic = new Traffic();
 	            traffic.setCar(trafficRequest.getCar());
 	            traffic.setUser(trafficRequest.getUser());
@@ -94,22 +100,16 @@ public class TrafficController {
 	            Traffic createdTraffic = trafficService.createTraffic(user, car, traffic);
 
 	            return ResponseEntity.ok(createdTraffic);
-	        } catch (Exception ex) {
-	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-	        }
+	     //   } catch (Exception ex) {
+	       /*     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+	        }*/
 	    }
-	 /*@GetMapping
-	    public ResponseEntity<List<User>> getAllUsers() {
-	        List<User> users = userService.getAllUsers();
-	        return ResponseEntity.ok(users);
-	    }*/
+	
 	 @GetMapping
 	 public ResponseEntity<List<Traffic>> getAllTraffic(){
 		 List<Traffic> traffics=trafficService.getAllTraffic();
 		 return ResponseEntity.ok(traffics);
-		 
-		 
-	 }
+	}
 	
 	 @DeleteMapping("/{trafficId}")
 	 public void deleteTraffic(@PathVariable Long trafficId) {

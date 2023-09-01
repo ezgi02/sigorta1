@@ -7,7 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -19,15 +19,23 @@ public class User {
 	@GeneratedValue
 	private long id;
 	@NotNull
+	@NotEmpty
 	private String username;
+	@NotEmpty
 	@NotNull
 	private String surname;
 	@NotNull
+	@NotEmpty(message="TC Kimlik Numarası boş bırakılamaz")
     @Size(min = 11, max = 11, message = "TC Kimlik Numarası 11 haneli olmalıdır")
     @Pattern(regexp = "\\d+", message = "TC Kimlik Numarası sadece rakamlardan oluşmalıdır")
-	private String tc;
-	private String phone;
 	
+	private String tc;
+	@NotNull
+	@Pattern(regexp = "\\d{3}-\\d{3}-\\d{4}", message = "Geçerli bir telefon numarası formatı kullanın")
+	@Size(min = 10, max = 15, message = "Telefon numarası 10 ile 15 karakter arasında olmalıdır")
+	private String phone;
+	@NotNull
+	@NotEmpty(message="doğum tarihi boş bırakılamaz")
 	private String birthDate;
 	
 	

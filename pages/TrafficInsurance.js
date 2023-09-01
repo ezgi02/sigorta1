@@ -1,12 +1,17 @@
 import React, { useState,useEffect} from "react"
 import axios from 'axios';
-import { useParams } from 'react-router-dom'
+import {Link, useParams } from 'react-router-dom'
 import Select from 'react-select';
 function TrafficInsurance(){
   const { userId } = useParams()
   const[markalar,setMarkalar]=useState([])
   const [modeller, setModeller] = useState([]);
+  const [selectedModel, setSelectedModel] = useState(null)
+  const [plateNumber, setPlateNumber] = useState('');
   const [acceptedOffer, setAcceptedOffer] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [motorHacmiler, setMotorHacmiler] = useState([])
+  const [hasarsizGunSayileri, setHasarsizGunSayileri] = useState([]);
     const [trafik, setTrafik] = useState({
        
         
@@ -19,87 +24,109 @@ function TrafficInsurance(){
       motorHacim:'',
       hasarsizGunSayisi:'',
       fiyat: 0,
+      plakaKodu:'',
     });
     const [userInfo, setUserInfo] = useState(null);
   
     const handleTrafikChange = (selectedOption, fieldName) => {
       setTrafik({ ...trafik, [fieldName]: selectedOption.value });
     };
-    useEffect(() => {
-      fetchMarkalar();
-    }, []);
-  
+    
     const fetchMarkalar = async () => {
       try {
         const response = await axios.get('/api/1.0/markalar');
+       
         setMarkalar(response.data);
       } catch (error) {
         console.error('Error fetching markalar:', error);
       }
     };
     useEffect(() => {
-      fetchModeller();
+      fetchMarkalar();
     }, []);
-  
-    const fetchModeller = async () => {
+   
+    
+    const handleMarkaChange = async (selectedOption) => {
+      const markaId = selectedOption.id; 
+      const isim=selectedOption.value// Seçilen markanın ID'sini alıyoruz
+      console.log("Selected Marka ID:", markaId);
+      console.log(isim)
       try {
-        const response = await axios.get('/api/1.0/modeller');
-        setModeller(response.data);
+          const response = await axios.get(`/api/1.0/${markaId}/modeller`);
+          console.log(response.data);
+          const modelOptions = response.data.map(model => ({ value: model.label, label: model.label }));
+          setModeller(modelOptions);
+          console.log(isim)
+          console.log(selectedOption.value)
+          selectedOption.value = selectedOption.label;
+         handleCarInfoChange(selectedOption, 'marka');
+         
+          setSelectedModel(null);
+         
       } catch (error) {
-        console.error('Error fetching modeller:', error);
+          console.error("Error fetching modeller", error);
       }
+  };
+  const handleModelChange = (selectedOption) => {
+      setSelectedModel(selectedOption);
+  
+     handleCarInfoChange(selectedOption, 'model');
     };
   
+    useEffect(() => {
+      fetchMotorHacmiler();
+  }, []);
   
-    const handleCarInfoChange = (selectedOption, fieldName) => {
-      const selectedMarka = selectedOption.value;
-      const filteredModeller = modeller.filter(model => model.value.startsWith(selectedMarka));
-      setModeller(filteredModeller);
-      setCarInfo({ ...carInfo, [fieldName]: selectedOption.value ,marka: selectedMarka, model: '' });
+  const fetchMotorHacmiler = async () => {
+      try {
+          const response = await axios.get('/api/1.0/motor/all-hacimleri'); 
+          const motorHacimleri = response.data;
+
+          console.log(motorHacimleri);
+          setMotorHacmiler(motorHacimleri);
+      } catch (error) {
+          console.error('Error fetching motor hacimleri:', error);
+      }
+  };
+  useEffect(() => {
+    fetchHasarsizGunSayilari();
+}, []);
+
+const fetchHasarsizGunSayilari = async () => {
+    try {
+        const response = await axios.get('/api/1.0/hasarsiz/all-hasarsizgunsayileri'); 
+        const  hasarsizGunSayileri= response.data;
+
+        console.log(hasarsizGunSayileri);
+        setHasarsizGunSayileri(hasarsizGunSayileri);
+    } catch (error) {
+        console.error('Error fetching motor hasarsizGunSayileri:', error);
+    }
+};
+
+  
+     const handleCarInfoChange = (selectedOption, fieldName) => {
+      if (fieldName === 'marka') {
+        const markaId = selectedOption.id; // Seçilen markanın ID'sini alıyoruz
+        console.log("Selected Marka ID:", markaId);
+        setCarInfo({ ...carInfo, [fieldName]: selectedOption.label, model: '' });
+    
+      }else {
+        setCarInfo({ ...carInfo, [fieldName]: selectedOption.value });
+      }
     };
   
     
       const [fiyat, setFiyat] = useState(null)
      
-  //     const markalar = [
-  //   { value: 'audi', label: 'Audi' },
-  //   { value: 'bmw', label: 'BMW' },
-  //   {value:'toyoto',label:'Toyoto'},
-  //   {value:'opel',label:'Opel'},
-  //   {value:'fiat',label:'Fiat'},
-  //   {value:'',label:'Opel'},
-  //   {value:'ford',label:'Ford'}
-  // ];
+  
 
-  // const modeller = [
-  //   { value: 'audi_model1', label: 'Audi e-tron' },
-  //   { value: 'audi_model2', label: 'Audi A4 Sedan' },
-  //   { value: 'bmw_model1', label: 'BMW i5' },
-  //   { value: 'bmw_model2', label: 'BMW M2 Coupe' },
-  //   { value: 'toyota_model1', label: 'Toyota Corollo' },
-  //   { value: 'toyota_model2', label: 'Toyota Yaris' },
-  //   { value: 'opel_model1', label: 'Opel Astra' },
-  //   { value: 'opel_model2', label: 'Opel Corsa' },
-  //   { value: 'fiat_model1', label: 'Fiat Egea' },
-  //   { value: 'fiat_model2', label: 'Fiat 500' },
-  //   { value: 'ford_model1', label: 'Ford Fiesta' },
-  //   { value: 'ford_model2', label: 'Ford Model 2' },
-
-    
-  // ];
-
+ 
       const aracTürleri = [
         { value: 'Otomobil', label: 'Otomobil' },
         { value: 'Kamyonet', label: 'Kamyonet' },
         {value:'Motorsiklet',label:'Motorsiklet'}
       ];
-      const motorHacmiler = [
-        { value: '1300', label: '1300' },
-        { value: '1301-1600', label: '1301-1600' },
-        {value:'1601 - 1800',label:'1601 - 1800'},
-        {value:'1801 - 2000',label:'1801 - 2000'},
-        {value:'2001 - 2500',label:'2001 - 2500'},
-        ];
         
         const yillar = [
           { value: 2023, label: '2023' },
@@ -119,16 +146,7 @@ function TrafficInsurance(){
       
           
         ];
-        const hasarsizGunSayisilar=[
-          { value: '0-180', label: '0-180' },
-          { value: '181-365', label: '181-365' },
-          { value: '366-540', label: '366-540' },
-          { value: '541-720', label: '541-720' },
-          { value: '721-1095', label: '721-1095' },
-          { value: '1096-1825', label: '1096-1825' },
-            
-           
-        ]
+       
          useEffect(() => {
           fetchUserInfo();
         }, [userId])
@@ -145,7 +163,7 @@ function TrafficInsurance(){
             } else {
               console.error('Error fetching user information:', error);
             }
-            //console.error('Error fetching user information:', error);
+            
           }
         };
         
@@ -158,7 +176,12 @@ function TrafficInsurance(){
             const newCarId = response.data.id;
             setCarInfo({ ...carInfo, id: newCarId });
             alert('Car information saved successfully!');
+            setValidationErrors({}); 
           } catch (error) {
+            if (error.response && error.response.data.validationErrors) {
+              // Sunucudan gelen validation hatalarını yakala
+              setValidationErrors(error.response.data.validationErrors);
+            }
             console.error('Car creation error:', error);
           }
         };
@@ -175,8 +198,14 @@ function TrafficInsurance(){
             console.log(response.data.fiyat)
             console.log(calculatedPrice);
             setFiyat(response.data);
-             // Teklifi sıfırla
+            setValidationErrors({}); 
+             
           } catch (error) {
+            if (error.response && error.response.data.validationErrors) {
+              // Sunucudan gelen validation hatalarını yakala
+              console.log(error.response.data.validationErrors)
+              setValidationErrors(error.response.data.validationErrors);
+            }
             console.error('AxiosError:', error);
           }
         };
@@ -194,15 +223,19 @@ function TrafficInsurance(){
             // setFiyat(response.data);
              // Teklifi sıfırla
           } catch (error) {
+            if (error.response && error.response.data.validationErrors) {
+              // Sunucudan gelen validation hatalarını yakala
+              console.log(error.response.data.validationErrors)
+              setValidationErrors(error.response.data.validationErrors);
+            }
             console.error('AxiosError:', error);
           }
         };
-    
-        
+       
     return(
         <div className="container">
             <h1>Trafik Sigortasi</h1>
-            <div>
+            {/* <div>
         
           Aracın Markası:
           <Select class="form-select form-select-lg"
@@ -213,17 +246,26 @@ function TrafficInsurance(){
            />
         
         <br />
-      </div>
-
-      
+      </div> */}
+        Arabanın Markası:
+          <Select className={` ${validationErrors.marka ? 'is-invalid' : ''}`}
+            value={markalar.find((option) => option.value === carInfo.marka)}
+            onChange={(selectedOption)=>handleMarkaChange(selectedOption)}
+            options={markalar.map(marka => ({ value: marka.value, label: marka.label,id: marka.id}))} 
+            //options={markalar}
+            placeholder='Marka Seçin'
+          />
+           {validationErrors.marka && (
+    <div className="invalid-feedback">{validationErrors.marka}</div>
+  )}
+        <br/>
         Aracın Modeli:
         <Select
-          value={modeller.find((option) => option.value === carInfo.model)}
-          onChange={(selectedOption) => handleCarInfoChange(selectedOption, 'model')}
+          value={selectedModel}
+          onChange={(selectedOption) => handleModelChange(selectedOption, 'model')}
           options={modeller}
           placeholder='Model Seçin'
         />
-      
       <br />
       Yıl:
         <Select
@@ -249,13 +291,62 @@ function TrafficInsurance(){
 
       
         Motorun Hacmi:
-        <Select
-          value={motorHacmiler.find((option) => option.value === carInfo.motorHacim)}
-          onChange={(selectedOption) => handleCarInfoChange(selectedOption, 'motorHacim')}
-          options={motorHacmiler}
-          placeholder='Motorun Hacmini Seçin'
-        />
       
+<Select
+  value={motorHacmiler.find(option => option.value === carInfo.motorHacim)}
+  onChange={(selectedOption) => handleCarInfoChange(selectedOption, 'motorHacim')}
+  options={motorHacmiler.map(option => ({ value: option, label: option }))}
+  placeholder='Motor Hacmi Seçin'
+/>
+<br/>
+Plaka Kodu
+      <input
+  className='form-control'
+  type='text'
+  name='plakaKodu'
+  value={carInfo.plakaKodu}
+  onChange={(e) => {
+    const inputValue = e.target.value;
+    const formattedValue = inputValue.toUpperCase(); // Küçük harfleri büyük harfe çevir
+    setCarInfo({ ...carInfo, plakaKodu: formattedValue });
+  }}
+  onKeyDown={(e) => {
+    const key = e.key;
+    const inputValue = e.target.value;
+    const isNumeric = /^[0-9]+$/.test(key);
+    const isLetter = /^[a-zA-Z]+$/.test(key);
+
+    if (key === "Backspace" || key === "Delete") {
+      return;
+    }
+    if (
+      (inputValue.length === 0 || inputValue.length === 1) &&
+      !isNumeric
+    ) {
+      e.preventDefault();
+    } else if (
+      (inputValue.length === 2 || inputValue.length === 3) &&
+      !isLetter
+    ) {
+      e.preventDefault();
+    } else if (
+      (inputValue.length === 4) &&
+      !isNumeric && !isLetter
+    ) {
+      e.preventDefault();
+    } else if (
+      (inputValue.length === 5 || inputValue.length === 6 || inputValue.length === 7 || inputValue.length === 8) &&
+      !isNumeric
+    ) {
+      e.preventDefault();
+    }
+  }}
+  maxLength={8}
+  placeholder='Plaka Kodu'
+  required
+/>
+
+        
       <br />
       Arabanın Fiyatı:
         <input
@@ -272,20 +363,17 @@ function TrafficInsurance(){
       <br />
       
       <div>
+        Hasarsiz Gun Sayisi
+      <Select
+  value={hasarsizGunSayileri.find(option => option.value === carInfo.hasarsizGunSayisi)}
+  onChange={(selectedOption) => handleCarInfoChange(selectedOption, 'hasarsizGunSayisi')}
+  options={hasarsizGunSayileri.map(option => ({ value: option, label: option }))}
+  placeholder='Hasarsiz Gun Sayisi Seçiniz'
+/>
         
-          HasarsizGunSayisi
-          <Select class="form-select form-select-lg"
-            value={hasarsizGunSayisilar.find((option) => option.value === carInfo.hasarsizGunSayisi)}
-            onChange={(selectedOption) => handleCarInfoChange(selectedOption, 'hasarsizGunSayisi')}
-            options={hasarsizGunSayisilar}
-            placeholder='HasarsizGunSayisi'
-          />
         
-        <br />
       </div>
-      <button type='button' className='btn btn-success' onClick={handleCreateCar}>
-        Kaydet
-      </button>
+      
       <button type='button' className='btn btn-warning' onClick={handleCalculateTraffic} >
         Trafik Sigorta Teklif Al
       </button>
@@ -293,6 +381,11 @@ function TrafficInsurance(){
       {fiyat !== null && <p>Fiyat: {fiyat}</p>}
       
       <button type="button" className="btn btn-primary" onClick={handleSaveTraffic}>Teklifi Kabul Et</button>
+      <button className="btn btn-danger">
+      <Link className='nav-link' to={"/anasayfa"}>
+            Reddet
+        </Link>
+      </button>
       <br />
 
         </div>

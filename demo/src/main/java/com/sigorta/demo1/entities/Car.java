@@ -14,19 +14,26 @@ public class Car {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-	@NotEmpty//(message="Marka boş bırakılamaz.")
+	@NotEmpty(message="Marka boş bırakılamaz.")
     private String marka;
 	@NotEmpty(message="Model boş bırakılamaz.")
     private String model;
-	
+	//@NotEmpty(message="Yil boş bırakılamaz")
     private int yil;
-	
+	//@NotEmpty
     private int fiyat;
 	
     private String aracTür;
     private String hasarsizGunSayisi;
+    private String plakaKodu;
 
-   	public String getHasarsizGunSayisi() {
+   	public String getPlakaKodu() {
+		return plakaKodu;
+	}
+	public void setPlakaKodu(String plakaKodu) {
+		this.plakaKodu = plakaKodu;
+	}
+	public String getHasarsizGunSayisi() {
 		return hasarsizGunSayisi;
 	}
 	public void setHasarsizGunSayisi(String hasarsizGunSayisi) {
