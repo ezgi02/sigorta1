@@ -8,19 +8,19 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
+
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.ExceptionHandler;
+//import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
+//import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.sigorta.demo1.UserWithInsurancesResponse;
 import com.sigorta.demo1.entities.User;
 import com.sigorta.demo1.error.ApiError;
 import com.sigorta.demo1.services.UserService;
@@ -40,44 +40,28 @@ public class UserController {
 	
 	@PostMapping
 	public ResponseEntity<?> createUser(@Valid @RequestBody User user) {
-	    ApiError error = new ApiError(400, "Validation error", "/api/1.0/users");
-	    Map<String, String> validationErrors = new HashMap<>();
-	    String username = user.getUsername();
-	    String surname = user.getSurname();
-	    if (username == null || username.isEmpty()) {
-	        validationErrors.put("username", "username cannot be null");
-	    }
-	    if (surname == null || surname.isEmpty()) {
-	        validationErrors.put("surname", "surname cannot be null");
-	    }
-	    if (validationErrors.size() > 0) {
-	        error.setValidationErrors(validationErrors);
-	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
-	    }
+	  
 
-	/*    User existingUser = userService.getUserWithSameTc(user.getTc());
-	    if (existingUser != null) {
-	    	ApiError errors = new ApiError(409, "Conflict", "/api/1.0/users");
-	        errors.setMessage("User with the same TC number already exists");
-	        return ResponseEntity.status(HttpStatus.CONFLICT).body(errors);
-	    }*/
+	   User tc = userService.getUserWithSameTc(user.getTc());
+	    if (tc != null) {
+	    	ApiError errors = new ApiError(400, "Validation error", "/api/1.0/users");
+	    	 Map<String, String> validationErrors = new HashMap<>();
+	    	 validationErrors.put("tc", "Aynı TC numarasına sahip kullanıcı zaten mevcut");
+	 		errors.setValidationErrors(validationErrors);
+	 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+	        
+	    }
 
 	    User savedUser = userService.save(user);
 	   // GenericResponse response = new GenericResponse("User created successfully", savedUser.getId());
 	   return ResponseEntity.ok(savedUser.getId());
 	}
-/*	@ExceptionHandler(MethodArgumentNotValidException.class)
-	@ResponseStatus(HttpStatus.BAD_REQUEST)
-	public ApiError handleValidationException(MethodArgumentNotValidException exception) {
-		ApiError error = new ApiError(400, "Validation error", "/api/1.0/users");
-		Map<String,String> validationErrors=new HashMap<>();
-		for(FieldError fieldError:exception.getBindingResult().getFieldErrors()) {
-			validationErrors.put(fieldError.getField(), fieldError.getDefaultMessage());
-		}
-		error.setValidationErrors(validationErrors);
-		return error;
-	}*/
-		
+	@GetMapping("/all")
+    public ResponseEntity<List<UserWithInsurancesResponse>> getAllUsersWithInsurances() {
+        List<UserWithInsurancesResponse> usersWithInsurances = userService.getAllUsersWithInsurances();
+        return ResponseEntity.ok(usersWithInsurances);
+    }
+
 		 @GetMapping("/{userId}")
 		 public User getOneUser(@PathVariable Long userId) {
 			 return userService.getOneUser(userId);

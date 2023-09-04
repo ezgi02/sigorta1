@@ -1,20 +1,57 @@
 package com.sigorta.demo1.services;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.sigorta.demo1.UserWithInsurancesResponse;
+import com.sigorta.demo1.entities.Dask;
+import com.sigorta.demo1.entities.Traffic;
 import com.sigorta.demo1.entities.User;
+import com.sigorta.demo1.entities.Kasko;
+import com.sigorta.demo1.repos.DaskRepository;
+import com.sigorta.demo1.repos.KaskoRepository;
+import com.sigorta.demo1.repos.TrafficRepository;
 import com.sigorta.demo1.repos.UserRepository;
 
 @Service
 public class UserService {
 	UserRepository userRepository;
+	@Autowired
+    private KaskoRepository kaskoRepository;
+    @Autowired
+    private TrafficRepository trafficRepository;
+    @Autowired
+    private DaskRepository daskRepository;
 	
 	public UserService(UserRepository userRepository) {
 		this.userRepository=userRepository;  
 	}
+	 public List<UserWithInsurancesResponse> getAllUsersWithInsurances() {
+	        List<User> users = userRepository.findAll();
+	        List<UserWithInsurancesResponse> usersWithInsurances = new ArrayList<>();
+
+	        for (User user : users) {
+	            List<Kasko> kaskoList = kaskoRepository.findByUser(user);
+	            List<Traffic> trafficList = trafficRepository.findByUser(user);
+	            List<Dask> daskList = daskRepository.findByUser(user);
+
+	            UserWithInsurancesResponse userWithInsurances = new UserWithInsurancesResponse(
+	                user.getUsername(),
+	                user.getSurname(),
+	                kaskoList,
+	                trafficList,
+	                daskList
+	            );
+
+	            usersWithInsurances.add(userWithInsurances);
+	        }
+
+	        return usersWithInsurances;
+	    }
 
 	public User save(User user) {
 		return userRepository.save(user);
