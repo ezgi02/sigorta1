@@ -34,6 +34,7 @@ function KaskoHesaplama() {
   
       // Burada model seçimini sıfırlayabilirsiniz
       setCarInfo({ ...carInfo, [fieldName]: selectedOption.label, model: '' });
+      setValidationErrors({ ...validationErrors, [fieldName]: '' });
     } else {
       setCarInfo({ ...carInfo, [fieldName]: selectedOption.value });
     }
@@ -148,7 +149,7 @@ const handleModelChange = (selectedOption) => {
       if(error.response){
         if (error.response.data.validationErrors) {
           console.log(error.response.data.validationErrors)
-        //setValidationErrors(error.response.data.validationErrors);
+        setValidationErrors(error.response.data.validationErrors);
         }else{
           console.log('Sunucu Hata Kodu:', error.response.status);
           console.log('Sunucu Hata Açıklaması:', error.response.data);
@@ -205,24 +206,26 @@ const handleModelChange = (selectedOption) => {
 
       
         Arabanın Modeli:
-        <Select
+        <Select className={` ${validationErrors.model ? 'is-invalid' : ''}`}
           // value={modeller.find((option) => option.value === carInfo.model)}
           value={selectedModel}
           onChange={(selectedOption) => handleModelChange(selectedOption, 'model')}
           options={modeller}
           placeholder='Model Seçin'
         />
-      
+       {validationErrors.model && (
+    <div className="invalid-feedback">{validationErrors.model}</div>
+  )}
       <br />
       Plaka Kodu
       <input
-  className='form-control'
+  className={`form-control ${validationErrors.plakaKodu ? 'is-invalid' : ''}` }
   type='text'
   name='plakaKodu'
   value={carInfo.plakaKodu}
   onChange={(e) => {
     const inputValue = e.target.value;
-    const formattedValue = inputValue.toUpperCase(); // Küçük harfleri büyük harfe çevir
+    const formattedValue = inputValue.toUpperCase(); 
     setCarInfo({ ...carInfo, plakaKodu: formattedValue });
   }}
   onKeyDown={(e) => {
@@ -260,6 +263,9 @@ const handleModelChange = (selectedOption) => {
   placeholder='Plaka Kodu'
   required
 />
+{validationErrors.plakaKodu && (
+    <div className="invalid-feedback">{validationErrors.plakaKodu}</div>
+  )}
 
         Yıl:
         <Select
@@ -296,7 +302,7 @@ const handleModelChange = (selectedOption) => {
       </buton>
       <button className='btn btn-danger'>
       <Link className='nav-link' to={"/anasayfa"}>
-            Reddet
+            Çıkış
         </Link>
       </button>
     </div>

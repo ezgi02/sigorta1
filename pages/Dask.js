@@ -4,6 +4,7 @@ import {Link, useParams } from 'react-router-dom'
 import Select from 'react-select';
 import { Button } from "reactstrap";
 import "../index.js"
+
 function Dask() {
     const [dask, setDask] = useState({
        
@@ -17,6 +18,8 @@ function Dask() {
     const [districts, setDistricts] = useState([]);
     const [selectedDistrict, setSelectedDistrict] = useState(null)
     const [selection,setSelection]=useState([])
+    const [validationErrors, setValidationErrors] = useState({});
+
     const [homeInfo, sethomeInfo] = useState({
         city: '',
         district: '',
@@ -24,7 +27,8 @@ function Dask() {
         constructionYear: '',
         numberofFloors: '',
         area: 0,
-        selection: ''
+        selection: '',
+        address:''
       });
       const [styles, setStyles] = useState([])
       const [years, setYears] = useState([])
@@ -164,7 +168,7 @@ function Dask() {
             ...prevHomeInfo,
             [fieldName]: selectedOption.value
         }));
-      
+        setValidationErrors({ ...validationErrors, [fieldName]: '' });
     };
     const handleCalculateDask= async () => {
         try {
@@ -181,14 +185,14 @@ function Dask() {
          //setFiyat(calculatedPrice)
          setSigortaPrim(calculatedPrice[0]);
          setFiyat(calculatedPrice[1])
-           
+         setValidationErrors({});            
         } catch (error) {
           console.error('AxiosError:', error);
           if (error.response && error.response.data) {
             console.error('Response Status:', error.response);
             console.error('Response Data:', error.response.data);
-           
-        }
+            setValidationErrors(error.response.data.validationErrors);
+          }
         }
       };
       
@@ -218,79 +222,99 @@ function Dask() {
         <div className="row g-3">
             <div className='col-md-4'>
                 İl
-                <Select
+                <Select className={` ${validationErrors.city ? 'is-invalid' : ''}` } 
                   value={cities.find((city) => city.value === homeInfo.city)}
                   onChange={(selectedOption) => handleCityChange(selectedOption)}
                   
                   options={cities.map((city) => ({ value: city.name, label: city.name }))}
                   placeholder='Seçiniz'
-                  
-                />
-                
-            </div>
+                />  
+                 {validationErrors.city && (
+                   <div className="invalid-feedback">{validationErrors.city}</div>
+                  )}     
+           </div>
             <div className='col-md-4'>
                 İlçe
-                <Select
+                <Select className={` ${validationErrors.district ? 'is-invalid' : ''}` } 
                  value={selectedDistrict}
                  onChange={(selectedOption) => handleDistrictChange(selectedOption)}
                  options={districts.map((district) => ({ value: district.name, label: district.name }))}
                  placeholder='Seçiniz'
                 />
+                {validationErrors.district && (
+                   <div className="invalid-feedback">{validationErrors.district}</div>
+                  )} 
             </div>
             <div className="col-md-8">
                 Bina Yapı Tarzı
-                <Select
+                <Select className={` ${validationErrors.buildingStyle ? 'is-invalid' : ''}` } 
                 value={styles.find(option => option.value === homeInfo.buildingStyle)}
                 onChange={(selectedOption) => handleHomeInfoChange(selectedOption, 'buildingStyle')}
                 options={styles.map(option => ({ value: option, label: option }))}
                 placeholder="Seçiniz"
                 />
+                {validationErrors.buildingStyle && (
+                   <div className="invalid-feedback">{validationErrors.buildingStyle}</div>
+                  )} 
             </div>
             <div className="col-md-8">
                 Bina İnşa Yılı
-                <Select
+                <Select className={` ${validationErrors.constructionYear ? 'is-invalid' : ''}` } 
                 value={years.find(option => option.value === homeInfo.constructionYear)}
                 onChange={(selectedOption) => handleHomeInfoChange(selectedOption, 'constructionYear')}
                 options={years.map(option=> ({ value: option, label: option }))}
                 placeholder="Şeçiniz"
                 />
+                {validationErrors.constructionYear && (
+                   <div className="invalid-feedback">{validationErrors.constructionYear}</div>
+                  )} 
             </div>
             <div className="col-md-8">
                 Toplam Kat Sayısı
-                <Select 
+                <Select className={` ${validationErrors.numberofFloors ? 'is-invalid' : ''}` } 
                 value={coeffcients.find(option => option.value === homeInfo.numberofFloors)}
                 onChange={(selectedOption) => handleHomeInfoChange(selectedOption, 'numberofFloors')}
                 options={coeffcients.map(option=> ({ value: option, label: option }))}
                 placeholder="Şeçiniz"
                 />
+                {validationErrors.numberofFloors && (
+                   <div className="invalid-feedback">{validationErrors.numberofFloors}</div>
+                  )} 
             </div>
             <div className="col-md-8">
                 <label>Daire Yüzölçümü (Brüt)</label>
-                <input className="form-control" 
+                <input className={`form-control ${validationErrors.numberofFloors ? 'is-invalid' : ''}` } 
                 type='number'
                 name='area'
                 value={homeInfo.area}
                 onChange={(e) => handleHomeInfoChange(e.target, 'area')}
-                
                 required
                 placeholder="m2"/>
+                {validationErrors.area && (
+                   <div className="invalid-feedback">{validationErrors.area}</div>
+                  )} 
             </div>
             <div className="col-md-8">
                 İşlem Tipi
-                <Select
+                <Select className={` ${validationErrors.selection ? 'is-invalid' : ''}` } 
                 value={selection.find(option => option.value === homeInfo.selection)}
                 onChange={(selectedOption) => handleHomeInfoChange(selectedOption, 'selection')}
                 options={selection.map(option=> ({ value: option, label: option }))}
                 placeholder="Seçiniz"
                 />
+                {validationErrors.selection && (
+                   <div className="invalid-feedback">{validationErrors.selection}</div>
+                  )} 
             </div>  
-            {/* <div className="col-md-8">
+            <div className="col-md-8">
               <label>Adres</label>
               <input className="form-control"
               type="text"
               name="adress"
+              value={homeInfo.address}
+              onChange={(e) => handleHomeInfoChange(e.target, 'address')}
               placeholder="sokak,mahalle"/>
-            </div> */}
+            </div> 
             <div className="row g-3">
               <div className="col-md-4"> 
               <button type='button' className='btn btn-warning' onClick={handleCalculateDask} >Dask Teklifi Al</button>
@@ -310,12 +334,6 @@ function Dask() {
             
         {sigortaPrim !== null && <p>Sigorta Primi: {sigortaPrim}</p>}
         {fiyat !== null && <p>Sigorta Bedeli: {fiyat}</p>}
-      
-      
-      
-      
-      
-      
         </div>
     </div>
   )

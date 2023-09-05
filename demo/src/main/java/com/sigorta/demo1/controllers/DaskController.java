@@ -40,23 +40,54 @@ public class DaskController {
 		this.homeRepository=homeRepository;
 	}
 	@PostMapping("/calculatePrice")
-	public ResponseEntity<Double[]> calculateDaskPrice(@RequestBody Dask daskRequest) {
-        try {
+	public ResponseEntity<?> calculateDaskPrice(@RequestBody Dask daskRequest) {
+      //  try {
         	Dask dask=new Dask();
 			dask.setHome(daskRequest.getHome());
 			dask.setUser(daskRequest.getUser());
+			ApiError error = new ApiError(400, "Validation error", "/api/1.0/dask/calculatePrice");
+			Map<String, String> validationErrors = new HashMap<>();
+			String city=daskRequest.getHome().getCity();
+			String district=daskRequest.getHome().getDistrict();
+			String buildingStyle=daskRequest.getHome().getBuildingStyle();
+			String constructionYear=daskRequest.getHome().getConstructionYear();
+			String numberofFloors=daskRequest.getHome().getNumberofFloors();
+			String selection=daskRequest.getHome().getSelection();
+			double area=daskRequest.getHome().getArea();
+			if (city == null || city.isEmpty()) {
+				validationErrors.put("city", "Lutfen şehrinizi giriniz");
+			}
+			if (district == null || district.isEmpty()) {
+				validationErrors.put("district", "Lutfen ilçenizi giriniz");
+			}
+			if (buildingStyle == null || buildingStyle.isEmpty()) {
+				validationErrors.put("buildingStyle", "Lutfen bina yapı tarzını giriniz");
+			}
+			if (constructionYear == null || constructionYear.isEmpty()) {
+				validationErrors.put("constructionYear", "Lutfen bina inşa yılınızı giriniz giriniz");
+			}
+			if (numberofFloors == null || numberofFloors.isEmpty()) {
+				validationErrors.put("numberofFloors", "Lutfen katsayisini  giriniz");
+			}
+			if (selection == null || selection.isEmpty()) {
+				validationErrors.put("selection", "Lutfen seçimini yapınız giriniz");
+			}
+			if (area <= 0) {
+			    validationErrors.put("area", "Alan pozitif bir değer olmalıdır.");
+			}
+
+			if (validationErrors.size() > 0) {
+				error.setValidationErrors(validationErrors);
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+			}
 			
-			User user=userRepository.save(dask.getUser());
-			Home home=homeRepository.save(dask.getHome());
-			dask.setUser(user);
-			dask.setHome(home);
-			Double[] calculatedDaskValues = daskService.calculateDaskPrice(user, home, daskRequest);
+			Double[] calculatedDaskValues = daskService.calculateDaskPrice(daskRequest.getUser(), daskRequest.getHome(), daskRequest);
             return ResponseEntity.ok(calculatedDaskValues);
-        } catch (Exception ex) {
+        /*} catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        }*/
     }
-	@ExceptionHandler(MethodArgumentNotValidException.class)
+	/*@ExceptionHandler(MethodArgumentNotValidException.class)
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	public ApiError handleValidationException(MethodArgumentNotValidException exception) {
 		ApiError error = new ApiError(400, "Validation error", "/api/1.0/dask/calculatePrice");
@@ -66,7 +97,7 @@ public class DaskController {
 		}
 		error.setValidationErrors(validationErrors);
 		return error;
-	}
+	}*/
 	@PostMapping("/saveDask")
 	public ResponseEntity<Dask> saveDask(@RequestBody Dask daskRequest) {
         try {

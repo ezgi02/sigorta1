@@ -1,6 +1,9 @@
 import React, { useState,useEffect} from "react"
 import axios from 'axios';
 import {Link, useParams } from 'react-router-dom'
+import { toast } from 'react-toastify';
+import ConfirmationDialog from "../components/ConfirmationDialog";
+
 import Select from 'react-select';
 function TrafficInsurance(){
   const { userId } = useParams()
@@ -12,6 +15,7 @@ function TrafficInsurance(){
   const [validationErrors, setValidationErrors] = useState({});
   const [motorHacmiler, setMotorHacmiler] = useState([])
   const [hasarsizGunSayileri, setHasarsizGunSayileri] = useState([]);
+  const [isOpen, setIsOpen] = useState(false);
     const [trafik, setTrafik] = useState({
        
         
@@ -23,7 +27,7 @@ function TrafficInsurance(){
       aracTür:'',
       motorHacim:'',
       hasarsizGunSayisi:'',
-      fiyat: 0,
+      fiyat: null,
       plakaKodu:'',
     });
     const [userInfo, setUserInfo] = useState(null);
@@ -113,7 +117,9 @@ const fetchHasarsizGunSayilari = async () => {
     
       }else {
         setCarInfo({ ...carInfo, [fieldName]: selectedOption.value });
-      }
+      }  
+
+      setValidationErrors({ ...validationErrors, [fieldName]: '' });
     };
   
     
@@ -199,7 +205,7 @@ const fetchHasarsizGunSayilari = async () => {
             console.log(calculatedPrice);
             setFiyat(response.data);
             setValidationErrors({}); 
-             
+            toast.success('Trafik sigortası başarılı bir şekilde hesaplandı!', { autoClose: 3000 });
           } catch (error) {
             if (error.response && error.response.data.validationErrors) {
               // Sunucudan gelen validation hatalarını yakala
@@ -207,6 +213,7 @@ const fetchHasarsizGunSayilari = async () => {
               setValidationErrors(error.response.data.validationErrors);
             }
             console.error('AxiosError:', error);
+            toast.error('Trafik sigortası hesaplanırken hata oluştu!', { autoClose: 3000 });
           }
         };
         const handleSaveTraffic = async () => {
@@ -222,6 +229,7 @@ const fetchHasarsizGunSayilari = async () => {
             // console.log(calculatedPrice);
             // setFiyat(response.data);
              // Teklifi sıfırla
+             //setIsOpen(true);
           } catch (error) {
             if (error.response && error.response.data.validationErrors) {
               // Sunucudan gelen validation hatalarını yakala
@@ -229,9 +237,32 @@ const fetchHasarsizGunSayilari = async () => {
               setValidationErrors(error.response.data.validationErrors);
             }
             console.error('AxiosError:', error);
+            
           }
+         
         };
+        // const closeModal = () => {
+        //   setIsOpen(false); // Onay kutusu modal'ını kapatmak için kullanılacak fonksiyon
+        // };
        
+  // const confirmSave = async () => {
+  //   // Kullanıcı "Evet" dediğinde kaydetme işlemini gerçekleştirin
+  //   // Örneğin:
+  //   try {
+  //     const response = await axios.post('/api/1.0/traffic/saveTraffic', {
+  //       user: userInfo,
+  //       car: carInfo,
+  //       ...trafik
+  //     });
+  //     // Kaydetme işlemi başarılı olduğunda gerekli kodları ekleyin
+  //   } catch (error) {
+  //     // Hata durumunda işlemi işlemek için gerekli kodları ekleyin
+  //   }
+
+  //   // Onay kutusu modal'ını kapat
+  //   closeModal();
+  // };
+
     return(
         <div className="container">
             <h1>Trafik Sigortasi</h1>
@@ -248,7 +279,7 @@ const fetchHasarsizGunSayilari = async () => {
         <br />
       </div> */}
         Arabanın Markası:
-          <Select className={` ${validationErrors.marka ? 'is-invalid' : ''}`}
+          <Select className={` ${validationErrors.marka ? 'is-invalid' : ''}` } 
             value={markalar.find((option) => option.value === carInfo.marka)}
             onChange={(selectedOption)=>handleMarkaChange(selectedOption)}
             options={markalar.map(marka => ({ value: marka.value, label: marka.label,id: marka.id}))} 
@@ -260,12 +291,15 @@ const fetchHasarsizGunSayilari = async () => {
   )}
         <br/>
         Aracın Modeli:
-        <Select
+        <Select className={` ${validationErrors.model ? 'is-invalid' : ''}` } 
           value={selectedModel}
           onChange={(selectedOption) => handleModelChange(selectedOption, 'model')}
           options={modeller}
           placeholder='Model Seçin'
         />
+         {validationErrors.model && (
+    <div className="invalid-feedback">{validationErrors.model}</div>
+  )}
       <br />
       Yıl:
         <Select
@@ -279,36 +313,44 @@ const fetchHasarsizGunSayilari = async () => {
       <div>
         
           Aracın Türü:
-          <Select class="form-select form-select-lg"
+          <Select className={` ${validationErrors.aracTür ? 'is-invalid' : ''}` } 
             value={aracTürleri.find((option) => option.value === carInfo.aracTür)}
             onChange={(selectedOption) => handleCarInfoChange(selectedOption, 'aracTür')}
             options={aracTürleri}
             placeholder='Aracın Türü Seçin'
           />
-        
+        {validationErrors.aracTür && (
+    <div className="invalid-feedback">{validationErrors.aracTür}</div>
+  )}
         <br />
       </div>
 
       
         Motorun Hacmi:
       
-<Select
-  value={motorHacmiler.find(option => option.value === carInfo.motorHacim)}
-  onChange={(selectedOption) => handleCarInfoChange(selectedOption, 'motorHacim')}
-  options={motorHacmiler.map(option => ({ value: option, label: option }))}
-  placeholder='Motor Hacmi Seçin'
-/>
-<br/>
-Plaka Kodu
+        
+        <Select className={` ${validationErrors.motorHacim ? 'is-invalid' : ''}`  } 
+        value={motorHacmiler.find(option => option.value === carInfo.motorHacim)}
+        onChange={(selectedOption) => handleCarInfoChange(selectedOption, 'motorHacim')}
+        options={motorHacmiler.map(option => ({ value: option, label: option }))}
+        placeholder='Motor Hacmi Seçin'
+      />
+      {validationErrors.motorHacim && (
+    <div className="invalid-feedback">{validationErrors.motorHacim}</div>
+  )}
+
+      <br/>
+      Plaka Kodu
       <input
-  className='form-control'
+  className={`form-control ${validationErrors.plakaKodu ? 'is-invalid' : ''}` }
   type='text'
   name='plakaKodu'
   value={carInfo.plakaKodu}
   onChange={(e) => {
     const inputValue = e.target.value;
-    const formattedValue = inputValue.toUpperCase(); // Küçük harfleri büyük harfe çevir
+    const formattedValue = inputValue.toUpperCase(); 
     setCarInfo({ ...carInfo, plakaKodu: formattedValue });
+    
   }}
   onKeyDown={(e) => {
     const key = e.key;
@@ -345,12 +387,15 @@ Plaka Kodu
   placeholder='Plaka Kodu'
   required
 />
+{validationErrors.plakaKodu && (
+    <div className="invalid-feedback">{validationErrors.plakaKodu}</div>
+  )}
 
         
       <br />
       Arabanın Fiyatı:
-        <input
-          className='form-control'
+        <input 
+        className={`form-control ${validationErrors.fiyat ? 'is-invalid' : ''}` }
           type='number'
           name='fiyat'
           value={carInfo.fiyat}
@@ -358,19 +403,23 @@ Plaka Kodu
           placeholder='Car Fiyat'
           required
         />
-      
+      {validationErrors.fiyat && (
+    <div className="invalid-feedback">{validationErrors.fiyat}</div>
+  )}
        
       <br />
       
       <div>
         Hasarsiz Gun Sayisi
-      <Select
+      <Select className={` ${validationErrors.hasarsizGunSayisi ? 'is-invalid' : ''}` }
   value={hasarsizGunSayileri.find(option => option.value === carInfo.hasarsizGunSayisi)}
   onChange={(selectedOption) => handleCarInfoChange(selectedOption, 'hasarsizGunSayisi')}
   options={hasarsizGunSayileri.map(option => ({ value: option, label: option }))}
   placeholder='Hasarsiz Gun Sayisi Seçiniz'
 />
-        
+{validationErrors.hasarsizGunSayisi && (
+    <div className="invalid-feedback">{validationErrors.hasarsizGunSayisi}</div>
+  )}
         
       </div>
       
@@ -381,9 +430,10 @@ Plaka Kodu
       {fiyat !== null && <p>Fiyat: {fiyat}</p>}
       
       <button type="button" className="btn btn-primary" onClick={handleSaveTraffic}>Teklifi Kabul Et</button>
+      {/* <ConfirmationDialog isOpen={isOpen} onClose={closeModal} onConfirm={confirmSave} /> */}
       <button className="btn btn-danger">
       <Link className='nav-link' to={"/anasayfa"}>
-            Reddet
+            Çıkış
         </Link>
       </button>
       <br />

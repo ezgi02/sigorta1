@@ -48,7 +48,7 @@ public class KaskoController {
         try {
             
         	if (kaskoService.isCarWithPlakaKoduExists(kaskoRequest.getCar().getPlakaKodu())) {
-                // Kullanıcıya uyarı mesajı dönebilirsiniz
+                
                 String warningMessage = "Bu plaka koduna sahip bir araç zaten kayıtlı.";
                 return ResponseEntity.badRequest().body(warningMessage);
             }
@@ -69,9 +69,28 @@ public class KaskoController {
     }
   
     @PostMapping("/kaskofiyati")
-    public ResponseEntity<Double> calculateKaskoPrice(@Valid @RequestBody Kasko kaskoRequest) {
+    public ResponseEntity<?> calculateKaskoPrice(@Valid @RequestBody Kasko kaskoRequest) {
         try {
+        	ApiError error = new ApiError(400, "Validation error", "/api/1.0/kasko/kaskofiyati");
+    		Map<String, String> validationErrors = new HashMap<>();
+    		String marka = kaskoRequest.getCar().getMarka();
+    		String model = kaskoRequest.getCar().getModel();
+    		String plakaKodu=kaskoRequest.getCar().getPlakaKodu();
+    		if (marka == null || marka.isEmpty()) {
+    			validationErrors.put("marka", "marka cannot be null");
+    		}
+    		if (model == null || model.isEmpty()) {
+    			validationErrors.put("model", "model cannot be null");
+    		}
+    		if (plakaKodu == null || plakaKodu.length() != 8) {
+    		    validationErrors.put("plakaKodu", "Lütfen 8 karakterden oluşan bir plaka kodu giriniz");
+    		}
+    		if (validationErrors.size() > 0) {
+    			error.setValidationErrors(validationErrors);
+    			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    		}
             double calculatedPrice = kaskoService.kaskoFiyat(kaskoRequest.getUser(), kaskoRequest.getCar(), kaskoRequest);
+            
             return ResponseEntity.ok(calculatedPrice);
         } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
