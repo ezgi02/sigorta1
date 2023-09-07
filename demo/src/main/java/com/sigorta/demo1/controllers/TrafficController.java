@@ -36,90 +36,106 @@ public class TrafficController {
 	private final TrafficService trafficService;
 	private final UserRepository userRepository;
 	private final CarRepository carRepository;
-	
 
 	@Autowired
-	public TrafficController(TrafficService trafficService, UserRepository userRepository, CarRepository carRepository) {
-		
-	    this.trafficService = trafficService;
-	    this.userRepository = userRepository;
-        this.carRepository = carRepository;
-	 }
-	
-	@PostMapping("/calculatePrice")
-    public ResponseEntity<Double> calculateTrafficPrice(@Valid @RequestBody Traffic trafficRequest) {
-     
-        	Traffic traffic=new Traffic();
-			traffic.setCar(trafficRequest.getCar());
-			traffic.setUser(trafficRequest.getUser());
-			
-			
-			Double calculatedPrice = trafficService.calculateTrafficPrice(trafficRequest.getUser(), trafficRequest.getCar(), trafficRequest);
-            return ResponseEntity.ok(calculatedPrice);
-       
-    }
-	/*@ExceptionHandler(MethodArgumentNotValidException.class)
-	@ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiError handleValidationException(MethodArgumentNotValidException exception) {
-		//ApiError error=new ApiError(400,"Validation error","/api/1.0/traffic/calculatePrice");
-        Map<String, String> validationErrors = new HashMap<>();
-        BindingResult bindingResult = exception.getBindingResult();
-        for (FieldError fieldError : bindingResult.getFieldErrors()) {
-            validationErrors.put(fieldError.getField(), fieldError.getDefaultMessage());
-        }
-        
-        ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST.value(), "Validation error", "/api/1.0/traffic/saveTraffic");
-        apiError.setValidationErrors(validationErrors);
-        
-     //   return ResponseEntity.badRequest().body(apiError);
-        return apiError;
-    }*/
-	/*@ExceptionHandler(MethodArgumentNotValidException.class)
-	@ResponseStatus(HttpStatus.BAD_REQUEST)
-	public ApiError handleValidationException(MethodArgumentNotValidException exception) {
-		ApiError error = new ApiError(400, "Validation error", "/api/1.0/traffic/saveTraffic");
-		Map<String,String> validationErrors=new HashMap<>();
-		for(FieldError fieldError:exception.getBindingResult().getFieldErrors()) {
-			validationErrors.put(fieldError.getField(), fieldError.getDefaultMessage());
-		}
-		error.setValidationErrors(validationErrors);
-		return error;
-	}*/
-	 @PostMapping("/saveTraffic")
-	 public ResponseEntity<Traffic> saveTraffic(@RequestBody Traffic trafficRequest) {
-	     //   try {
-	            Traffic traffic = new Traffic();
-	            traffic.setCar(trafficRequest.getCar());
-	            traffic.setUser(trafficRequest.getUser());
+	public TrafficController(TrafficService trafficService, UserRepository userRepository,
+			CarRepository carRepository) {
 
-	            User user = userRepository.save(traffic.getUser());
-	            Car car = carRepository.save(traffic.getCar());
-	            traffic.setUser(user);
-	            traffic.setCar(car);
-
-	            Traffic createdTraffic = trafficService.createTraffic(user, car, traffic);
-
-	            return ResponseEntity.ok(createdTraffic);
-	     //   } catch (Exception ex) {
-	       /*     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-	        }*/
-	    }
-	
-	 @GetMapping
-	 public ResponseEntity<List<Traffic>> getAllTraffic(){
-		 List<Traffic> traffics=trafficService.getAllTraffic();
-		 return ResponseEntity.ok(traffics);
+		this.trafficService = trafficService;
+		this.userRepository = userRepository;
+		this.carRepository = carRepository;
 	}
-	
-	 @DeleteMapping("/{trafficId}")
-	 public void deleteTraffic(@PathVariable Long trafficId) {
-		 trafficService.deleteById(trafficId);
-	 }
+
+	@PostMapping("/calculatePrice")
+	public ResponseEntity<?> calculateTrafficPrice(@Valid @RequestBody Traffic trafficRequest) {
+		ApiError error = new ApiError(400, "Validation error", "/api/1.0/traffic/saveTraffic");
+		Map<String, String> validationErrors = new HashMap<>();
+		String marka = trafficRequest.getCar().getMarka();
+		String model = trafficRequest.getCar().getModel();
+		String aracTür=trafficRequest.getCar().getAracTür();
+		String motorHacim=trafficRequest.getCar().getAracTür();
+		String hasarsizGunSayisi=trafficRequest.getCar().getHasarsizGunSayisi();
+		String plakaKodu=trafficRequest.getCar().getPlakaKodu();
+		//Integer fiyat=trafficRequest.getCar().getFiyat();
+		Integer yil=trafficRequest.getCar().getYil();
+		if (marka == null || marka.isEmpty()) {
+			validationErrors.put("marka", "marka cannot be null");
+		}
+		if (model == null || model.isEmpty()) {
+			validationErrors.put("model", "model cannot be null");
+		}
+		if (aracTür == null || aracTür.isEmpty()) {
+			validationErrors.put("aracTür", "aracTür cannot be null");
+		}
+		if(motorHacim==null || motorHacim.isEmpty()) {
+			validationErrors.put("motorHacim", "Lutfen motor hacmini boş bırakmayınız");
+		}
+		if(hasarsizGunSayisi==null || hasarsizGunSayisi.isEmpty()) {
+			validationErrors.put("hasarsizGunSayisi","Lutfen hasarsiz gun sayisi boş bırakmayınız" );
+		}
+		if (plakaKodu == null || plakaKodu.length() != 8) {
+		    validationErrors.put("plakaKodu", "Lütfen 8 karakterden oluşan bir plaka kodu giriniz");
+		}
+		
+		
+		
+
+		/*if (yil.toString().isEmpty()|| yil.toString()==null) {
+		    validationErrors.put("yil", "Lütfen bir yıl giriniz");
+		} */
+
+		if (validationErrors.size() > 0) {
+			error.setValidationErrors(validationErrors);
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+		}
+		
+		
+
+		Traffic traffic = new Traffic();
+		traffic.setCar(trafficRequest.getCar());
+		traffic.setUser(trafficRequest.getUser());
+
+		Double calculatedPrice = trafficService.calculateTrafficPrice(trafficRequest.getUser(), trafficRequest.getCar(),
+				trafficRequest);
+		return ResponseEntity.ok(calculatedPrice);
+
+	}
+
+	@PostMapping("/saveTraffic")
+	public ResponseEntity<?> saveTraffic(@RequestBody Traffic trafficRequest) {
+		// try {
+		if (trafficService.isCarWithPlakaKoduExists(trafficRequest.getCar().getPlakaKodu())) {
+
+			String warningMessage = "Bu plaka koduna sahip bir araç zaten kayıtlı.";
+			return ResponseEntity.badRequest().body(warningMessage);
+		}
+
+		Traffic traffic = new Traffic();
+		traffic.setCar(trafficRequest.getCar());
+		traffic.setUser(trafficRequest.getUser());
+
+		// User user = userRepository.save(traffic.getUser());
+	Car car = carRepository.save(traffic.getCar());
+		// traffic.setUser(user);
+	traffic.setCar(car);
+
+		Traffic createdTraffic = trafficService.createTraffic(trafficRequest.getUser(), trafficRequest.getCar(), traffic);
+
+		return ResponseEntity.ok(createdTraffic);
+		// } catch (Exception ex) {
+		/*
+		 * return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); }
+		 */
+	}
+
+	@GetMapping
+	public ResponseEntity<List<Traffic>> getAllTraffic() {
+		List<Traffic> traffics = trafficService.getAllTraffic();
+		return ResponseEntity.ok(traffics);
+	}
+
+	@DeleteMapping("/{trafficId}")
+	public void deleteTraffic(@PathVariable Long trafficId) {
+		trafficService.deleteById(trafficId);
+	}
 }
-
-
-
-
-
-
-

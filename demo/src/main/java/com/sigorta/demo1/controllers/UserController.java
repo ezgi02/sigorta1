@@ -49,7 +49,6 @@ public class UserController {
 	    	 validationErrors.put("tc", "Aynı TC numarasına sahip kullanıcı zaten mevcut");
 	 		errors.setValidationErrors(validationErrors);
 	 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
-	        
 	    }
 
 	    User savedUser = userService.save(user);

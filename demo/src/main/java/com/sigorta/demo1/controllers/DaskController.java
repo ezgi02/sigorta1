@@ -98,9 +98,21 @@ public class DaskController {
 		error.setValidationErrors(validationErrors);
 		return error;
 	}*/
+	
+	
 	@PostMapping("/saveDask")
-	public ResponseEntity<Dask> saveDask(@RequestBody Dask daskRequest) {
-        try {
+	public ResponseEntity<?> saveDask(@RequestBody Dask daskRequest) {
+      //  try {
+		if(daskService.addHomeIfNotExist(daskRequest.getHome().getCity(), daskRequest.getHome().getDistrict(), daskRequest.getHome().getAddress())) {
+			
+			ApiError errors = new ApiError(400, "Validation error", "/api/1.0/dask/saveDask");
+	    	 Map<String, String> validationErrors = new HashMap<>();
+	    	 validationErrors.put("address", "bu il,ilçe ve adresten kayıtlı bir ev bulunmaktadır");
+	 		errors.setValidationErrors(validationErrors);
+	 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+	        
+		}
+		
         	Dask dask=new Dask();
 			dask.setHome(daskRequest.getHome());
 			dask.setUser(daskRequest.getUser());
@@ -112,9 +124,9 @@ public class DaskController {
 			
 			Dask createdDask = daskService.createDask(user, home, daskRequest);
             return ResponseEntity.ok(createdDask);
-        } catch (Exception ex) {
+     /*   } catch (Exception ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        }*/
     }
 	@GetMapping
 	public ResponseEntity<List<Dask>> getAllDask(){
